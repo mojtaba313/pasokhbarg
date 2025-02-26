@@ -17,17 +17,18 @@ export default function CreateTestModal({
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: "",
-    startQuestion: 1,
-    endQuestion: 10,
     loading: false,
     error: "",
   });
+  const [startQuestion, setStartQuestion] = useState<>('0');
+  const [endQuestion, setEndQuestion] = useState<>('10');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormData((prev) => ({ ...prev, loading: true, error: "" }));
-
-    const sortedNumbers = [formData.startQuestion, formData.endQuestion].sort(
+    if(!startQuestion || !endQuestion) return;
+    
+    const sortedNumbers = [Math.floor(Number(startQuestion)),Math.floor(Number(endQuestion))].sort(
       (a, b) => a - b
     );
 
@@ -99,10 +100,7 @@ export default function CreateTestModal({
                     id="startQuestion"
                     value={formData.startQuestion}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        startQuestion: Math.floor(Number(e.target.value || 0)),
-                      }))
+                      setStartQuestion(e.target.value)
                     }
                     className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
@@ -121,10 +119,7 @@ export default function CreateTestModal({
                     id="endQuestion"
                     value={formData.endQuestion}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        endQuestion: Math.floor(Number(e.target.value || 0)),
-                      }))
+                      setEndQuestion(e.target.value)
                     }
                     className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
