@@ -98,7 +98,7 @@ export default function CreateTestModal({
                   <input
                     type="number"
                     id="startQuestion"
-                    value={formData.startQuestion}
+                    value={startQuestion}
                     onChange={(e) =>
                       setStartQuestion(e.target.value)
                     }
@@ -117,7 +117,7 @@ export default function CreateTestModal({
                   <input
                     type="number"
                     id="endQuestion"
-                    value={formData.endQuestion}
+                    value={endQuestion}
                     onChange={(e) =>
                       setEndQuestion(e.target.value)
                     }
