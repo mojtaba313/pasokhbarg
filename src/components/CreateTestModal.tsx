@@ -20,8 +20,8 @@ export default function CreateTestModal({
     loading: false,
     error: "",
   });
-  const [startQuestion, setStartQuestion] = useState<>('0');
-  const [endQuestion, setEndQuestion] = useState<>('10');
+  const [startQuestion, setStartQuestion] = useState('0');
+  const [endQuestion, setEndQuestion] = useState('10');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
