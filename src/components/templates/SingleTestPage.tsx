@@ -34,7 +34,7 @@ type Test = {
 const SingleTestPage: FC<Props> = ({ testID }) => {
   let ii = 1;
   const [test, setTest] = useState<Test>();
-  const [currentQuestion, setCurrentQuestion] = useState<number>(5);
+  const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const router = useRouter();
 
