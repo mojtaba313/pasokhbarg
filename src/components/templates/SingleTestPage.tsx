@@ -42,7 +42,6 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
     const fetchTest = async () => {
       const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
       setTest(data);
-      console.log("first q", data);
     };
 
     fetchTest();

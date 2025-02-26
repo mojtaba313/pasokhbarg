@@ -18,7 +18,7 @@
 }
 
 * {
-  @apply font-vazir;
+  @apply font-vazir !outline-none;
 }
 
 body {

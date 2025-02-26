@@ -38,6 +38,43 @@ const QuestionRow = ({
       ? onChoose(question.number, 0)
       : onChoose(question.number, index + 1);
 
+  const handleUserKeyPress = (e: KeyboardEvent) => {
+    const { key } = e;
+    if (
+      [
+        "1",
+        "2",
+        "3",
+        "4",
+        "ArrowDown",
+        "Enter",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowLeft",
+        "Backspace",
+      ].includes(key)
+    )
+      e.preventDefault();
+    if (["1", "2", "3", "4"].includes(key)) {
+      onChoose(question.number, Number(key));
+      setCurrentQuestion((prev) => prev + 1);
+    } else if (["ArrowDown", "Enter", "ArrowRight"].includes(key)) {
+      setCurrentQuestion((prev) => prev + 1);
+    } else if (["ArrowUp", "ArrowLeft"].includes(key)) {
+      setCurrentQuestion((prev) => prev - 1);
+    } else if (key === "Backspace") {
+      setCurrentQuestion(0);
+    }
+  };
+
+  useEffect(() => {
+    if (isCurrent) window.addEventListener("keydown", handleUserKeyPress);
+
+    return () => {
+      window.removeEventListener("keydown", handleUserKeyPress);
+    };
+  });
+
   useEffect(() => {
     if (isCurrent) {
       intervalRef.current = window.setInterval(() => {
@@ -54,10 +91,7 @@ const QuestionRow = ({
   }, [isCurrent]);
 
   useEffect(() => {
-    if (question.timeSpent !== time) {
-      console.log("row", time, question);
-      onPause(question.number, time);
-    }
+    if (question.timeSpent !== time) onPause(question.number, time);
   }, [currentQuestion]);
 
   return (
