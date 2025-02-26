@@ -1,57 +1,64 @@
 // components/CreateTestModal.tsx
-'use client'
-import { useState } from 'react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
-import axios from 'axios'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 interface CreateTestModalProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }
 
-export default function CreateTestModal({ open, onClose }: CreateTestModalProps) {
-  const router = useRouter()
+export default function CreateTestModal({
+  open,
+  onClose,
+}: CreateTestModalProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
-    title: '',
+    title: "",
     startQuestion: 1,
     endQuestion: 10,
     loading: false,
-    error: ''
-  })
+    error: "",
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormData(prev => ({ ...prev, loading: true, error: '' }))
+    e.preventDefault();
+    setFormData((prev) => ({ ...prev, loading: true, error: "" }));
+
+    const sortedNumbers = [formData.startQuestion, formData.endQuestion].sort(
+      (a, b) => a - b
+    );
 
     try {
-      const { data } = await axios.post('/api/tests', {
+      const { data } = await axios.post("/api/tests", {
         title: formData.title,
-        startQuestion: formData.startQuestion,
-        endQuestion: formData.endQuestion
-      })
-      
-      router.push(`/test/${data._id}`)
-      onClose()
-    } catch (error: any) {
-      setFormData(prev => ({
-        ...prev,
-        error: error.response?.data?.message || 'خطایی رخ داده است',
-        loading: false
-      }))
-    }
-  }
+        startQuestion: sortedNumbers[0],
+        endQuestion: sortedNumbers[1],
+      });
 
-  if (!open) return null
+      router.push(`/test/${data._id}`);
+      onClose();
+    } catch (error: any) {
+      setFormData((prev) => ({
+        ...prev,
+        error: error.response?.data?.message || "خطایی رخ داده است",
+        loading: false,
+      }));
+    }
+  };
+
+  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-md relative">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" dir="rtl">
+      <div className="bg-white dark:bg-slate-800 rounded-lg w-full max-w-md relative">
         <button
           onClick={onClose}
           className="absolute top-4 left-4 p-1 rounded-full hover:bg-gray-100"
         >
-          <XMarkIcon className="w-6 h-6 text-gray-600" />
+          <XMarkIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
         </button>
 
         <div className="p-6">
@@ -60,57 +67,66 @@ export default function CreateTestModal({ open, onClose }: CreateTestModalProps)
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label htmlFor="title" className="block mb-1 text-sm text-gray-600">
+                <label
+                  htmlFor="title"
+                  className="block mb-1 text-sm text-gray-600 dark:text-gray-300"
+                >
                   عنوان آزمون
                 </label>
                 <input
                   type="text"
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                  }
+                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
-                  minLength={3}
                   maxLength={50}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="startQuestion" className="block mb-1 text-sm text-gray-600">
+                  <label
+                    htmlFor="startQuestion"
+                    className="block mb-1 text-sm text-gray-600 dark:text-gray-300"
+                  >
                     شماره سوال شروع
                   </label>
                   <input
                     type="number"
                     id="startQuestion"
                     value={formData.startQuestion}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      startQuestion: Math.max(1, parseInt(e.target.value))
-                    }))}
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                    min={1}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        startQuestion: Math.floor(Number(e.target.value || 0)),
+                      }))
+                    }
+                    className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="endQuestion" className="block mb-1 text-sm text-gray-600">
+                  <label
+                    htmlFor="endQuestion"
+                    className="block mb-1 text-sm text-gray-600 dark:text-gray-300"
+                  >
                     شماره سوال پایان
                   </label>
                   <input
                     type="number"
                     id="endQuestion"
                     value={formData.endQuestion}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      endQuestion: Math.max(
-                        formData.startQuestion + 1,
-                        parseInt(e.target.value)
-                      )
-                    }))}
-                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                    min={formData.startQuestion + 1}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        endQuestion: Math.floor(Number(e.target.value || 0)),
+                      }))
+                    }
+                    className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -128,7 +144,7 @@ export default function CreateTestModal({ open, onClose }: CreateTestModalProps)
                   disabled={formData.loading}
                   className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
                 >
-                  {formData.loading ? 'در حال ایجاد...' : 'ایجاد آزمون'}
+                  {formData.loading ? "در حال ایجاد..." : "ایجاد آزمون"}
                 </button>
               </div>
             </div>
@@ -136,5 +152,5 @@ export default function CreateTestModal({ open, onClose }: CreateTestModalProps)
         </div>
       </div>
     </div>
-  )
+  );
 }

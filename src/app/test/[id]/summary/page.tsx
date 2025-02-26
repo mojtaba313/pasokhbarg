@@ -2,7 +2,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import TestSummary from '../../../components/TestSummary'
+// import TestSummary from '../../../components/TestSummary'
 
 export default function SummaryPage({ params }: { params: { id: string } }) {
   const [test, setTest] = useState<any>(null)
@@ -20,7 +20,7 @@ export default function SummaryPage({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
-        <TestSummary test={test} />
+        {/* <TestSummary test={test} /> */}
       </div>
     </div>
   )

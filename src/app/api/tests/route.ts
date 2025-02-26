@@ -21,6 +21,7 @@ export async function POST(req: Request) {
       { length: endQuestion - startQuestion + 1 },
       (_, i) => ({
         number: startQuestion + i,
+        selectedOption:0,
         timeSpent: 0,
       })
     );
@@ -53,4 +54,3 @@ export const GET = async () => {
     return NextResponse.json({ message: "has an error ==>", err });
   }
 };
-

@@ -6,9 +6,13 @@ import {
   ArrowLeftIcon,
   ClockIcon,
   DocumentTextIcon,
+  ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import Timer from "@/components/Timer";
 import QuestionNavigation from "@/components/QuestionNavigation";
+import { IQuestion } from "@/models/Test";
+import QuestionRow from "../layout/QuestionRow";
+import ConfirmModal from "../ConfirmModal";
 
 interface Question {
   number: number;
@@ -20,132 +24,133 @@ interface Props {
   testID: string;
 }
 
+type Test = {
+  startTime: Date;
+  endTime: Date;
+  questions: IQuestion[];
+  id: string;
+};
+
 const SingleTestPage: FC<Props> = ({ testID }) => {
-  const [test, setTest] = useState<any>(null);
-  const [currentQuestion, setCurrentQuestion] = useState<number>(0);
-  const [notes, setNotes] = useState("");
-  const [mobilePage, setMobilePage] = useState(1);
+  let ii = 1;
+  const [test, setTest] = useState<Test>();
+  const [currentQuestion, setCurrentQuestion] = useState<number>(5);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const fetchTest = async () => {
-      if (!testID) return;
-      const { data } = await axios.get(`/api/tests/${testID}`);
+      const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
       setTest(data);
-      setNotes(data.notes);
+      console.log("first q", data);
     };
 
     fetchTest();
   }, [testID]);
 
-  const updateQuestion = useCallback(
-    async (question: Question) => {
-      setTest((prev: any) => ({
-        ...prev,
-        questions: prev.questions?.map((q: Question) =>
-          q.number === question.number ? question : q
-        ),
-      }));
-
-      await axios.put(`/api/tests/${testID}`, {
-        questions: test.questions,
-        notes,
-      });
-    },
-    [testID, notes, test?.questions]
-  );
-
-  const handleEndTest = async () => {
-    await axios.put(`/api/tests/${testID}`, {
-      endTime: new Date(),
-      questions: test.questions,
-      notes,
-    });
-    router.push(`/test/${testID}/summary`);
-  };
+  const updateTest = async (newData?: Test) =>
+    await axios.put(`/api/tests/${testID}`, newData || test);
 
   if (!test) return <div>Loading...</div>;
 
+  const handleEndTest = async () =>
+    await axios.put(`/api/tests/${testID}`, {
+      endTime: new Date(),
+      questions: test.questions,
+    });
+
+  const onPause = (number: number, addingTime: number) => {
+    const newTest = {
+      ...test,
+      questions: test.questions?.map((q: Question) =>
+        q.number === number ? { ...q, timeSpent: addingTime } : q
+      ),
+    };
+    setTest(newTest);
+    updateTest(newTest);
+  };
+
+  const onChoose = (number: number, optionNumber: number) => {
+    const newTest = {
+      ...test,
+      questions: test.questions?.map((q: Question) =>
+        q.number === number ? { ...q, selectedOption: optionNumber } : q
+      ),
+    };
+    setTest(newTest);
+    updateTest(newTest);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-8">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen w-screen h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="hidden xs:flex items-center justify-between p-8 h-20 bg-white dark:bg-gray-800 shadow-sm">
           <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600"
+            onClick={() => router.push("/")}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
           >
             <ArrowLeftIcon className="w-5 h-5" />
             بازگشت
           </button>
+
           <Timer startTime={test.startTime} endTime={test.endTime} />
-        </div>
 
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Question Navigation */}
-          {test.questions && (
-            <QuestionNavigation
-              questions={test.questions}
-              currentQuestion={currentQuestion}
-              onChangeQuestion={setCurrentQuestion}
-              mobilePage={mobilePage}
-              onPageChange={setMobilePage}
-            />
-          )}
-
-          {/* Current Question */}
-          <div className="flex-1 bg-white p-6 rounded-xl shadow-sm">
-            <div className="flex items-center gap-2 mb-6">
-              <DocumentTextIcon className="w-6 h-6 text-blue-500" />
-              <h2 className="text-xl font-semibold">
-                سوال {currentQuestion + 1}
-              </h2>
-            </div>
-
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map((option) => (
-                  <button
-                    key={option}
-                    onClick={() =>
-                      updateQuestion({
-                        ...test.questions?.[currentQuestion],
-                        selectedOption: option,
-                      })
-                    }
-                    className={`p-4 rounded-lg ${
-                      test.questions?.[currentQuestion].selectedOption ===
-                      option
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-100 hover:bg-gray-200"
-                    }`}
-                  >
-                    گزینه {option}
-                  </button>
-                ))}
-              </div>
-
-              <div className="border-t pt-4">
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full p-3 border rounded-lg"
-                  placeholder="یادداشت‌های شما..."
-                  rows={4}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 flex justify-end">
           <button
-            onClick={handleEndTest}
-            className="bg-red-500 text-white px-6 py-2 rounded-lg"
+            onClick={()=>setShowConfirmModal(true)}
+            className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors shadow-lg hover:shadow-red-500/50"
           >
             پایان آزمون
           </button>
         </div>
+
+        {/* Questions Container */}
+        <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent px-20">
+          {Array(Math.ceil(test.questions?.length / 10 || 0))
+            .fill(0)
+            .map((_, i) => (
+              <div
+                key={`${i}-`}
+                className="border dark:border-slate-700 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-w-[300px]"
+              >
+                {/* Card Header */}
+                <div className="flex justify-between p-4 border-b dark:border-gray-700 pr-8">
+                  <div>
+                    <ListBulletIcon width={25} className="text-blue-500" />
+                  </div>
+                  <div>
+                    <ClockIcon width={25} className="text-yellow-500" />
+                  </div>
+                </div>
+
+                {/* Questions List */}
+                <div className="flex flex-col p-4 space-y-3">
+                  {test.questions
+                    .slice(10 * i, 10 * i + 10)
+                    .map((question, j) => (
+                      <div key={`${i}-${j}`}>
+                        <QuestionRow
+                          question={question}
+                          currentQuestion={currentQuestion}
+                          setCurrentQuestion={setCurrentQuestion}
+                          onPause={onPause}
+                          onChoose={onChoose}
+                        />
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
+      {/* مودال تأیید پایان */}
+      <ConfirmModal
+        open={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleEndTest}
+        title="پایان آزمون"
+        description="آیا مطمئن هستید که می‌خواهید این آزمون را پایان کنید؟ این عمل برگشت‌ناپذیر است."
+      />
     </div>
   );
 };
