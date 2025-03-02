@@ -39,7 +39,7 @@ export default function CreateTestModal({
         endQuestion: sortedNumbers[1],
       });
 
-      router.push(`/test/${data._id}`);
+      router.push(`/tests/${data._id}`);
       onClose();
     } catch (error: any) {
       setFormData((prev) => ({

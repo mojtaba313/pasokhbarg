@@ -1,4 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
+// models/Test.ts
+import mongoose, { Document, Schema } from "mongoose";
 
 export interface IQuestion {
   number: number;
@@ -15,6 +16,20 @@ export interface ITest extends Document {
   endTime?: Date;
   notes: string;
   userId: string;
+  viewed: boolean; // اضافه کردن فیلد viewed
+}
+
+export interface IntermediateTest {
+  _id: string;
+  title: string;
+  startQuestion: number;
+  endQuestion: number;
+  questions: IQuestion[];
+  startTime: Date;
+  endTime?: Date;
+  notes: string;
+  userId: string;
+  viewed: boolean;
 }
 
 const TestSchema = new Schema<ITest>({
@@ -29,7 +44,8 @@ const TestSchema = new Schema<ITest>({
   startTime: { type: Date, default: Date.now },
   endTime: Date,
   notes: String,
-  userId: String
+  userId: { type: String, required: true },
+  viewed: { type: Boolean, default: false } // اضافه کردن فیلد viewed
 });
 
-export default mongoose.models.Test || mongoose.model<ITest>('Test', TestSchema);
+export default mongoose.models.Test || mongoose.model<ITest>("Test", TestSchema);

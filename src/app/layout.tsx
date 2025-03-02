@@ -1,6 +1,9 @@
+// app/layout.tsx
 import type { Metadata } from "next";
+import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 import Settings from "../components/layout/Settings";
+import Providers from "./Provider";
 
 export const metadata: Metadata = {
   title: "اپلیکیشن پاسخبرگ",
@@ -13,12 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`antialiased`}
-      >
-        {children}
-        <Settings/>
+    <html lang="fa" dir="rtl">
+      <body className={`antialiased`}>
+        <Providers>
+          {children}
+          <Settings />
+        </Providers>
       </body>
     </html>
   );

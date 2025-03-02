@@ -42,7 +42,7 @@ export const PUT = async (
       });
     }
 
-    return new Response(JSON.stringify(user), { status: 200 });
+    return new Response(JSON.stringify(user), { status: 201 });
   } catch (error: any) {
     return new Response(JSON.stringify({ message: error.message }), {
       status: 400,
@@ -58,7 +58,7 @@ export async function DELETE(
     const id = (await params).id;
     await connectDB();
     await Test.findByIdAndDelete(id);
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, status: 203 });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to delete test" },
