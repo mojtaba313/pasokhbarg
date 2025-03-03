@@ -21,7 +21,9 @@ const TestResultQuestionRow = ({ question }: Props) => {
       : isCorrect
       ? "border-2 border-green-500"
       : "bg-blue-400/10"
-      : "bg-blue-500"
+      : isSelected
+      ? "bg-blue-500"
+      :"bg-blue-400/10"
     return (
       <button
         key={`${number}--${i}`}
