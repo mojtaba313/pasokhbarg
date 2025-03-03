@@ -7,7 +7,7 @@ interface Props {
   question: IQuestion;
 }
 
-const QuestionRow = ({ question }: Props) => {
+const TestResultQuestionRow = ({ question }: Props) => {
   const { answer, selectedOption, number } = question;
 
   const renderOptionButton = (i: number) => {
@@ -55,4 +55,4 @@ const QuestionRow = ({ question }: Props) => {
   );
 };
 
-export default QuestionRow;
+export default TestResultQuestionRow;

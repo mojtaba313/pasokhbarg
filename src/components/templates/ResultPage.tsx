@@ -15,6 +15,7 @@ import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
 import AddAnswerQuestionRow from "../layout/AddAnswerQuestionRow";
+import TestResultQuestionRow from "../layout/TestResultQuestionRow";
 
 interface Question {
   number: number;
@@ -133,12 +134,7 @@ const ResultPage: FC<Props> = ({ testID }) => {
                     .slice(10 * i, 10 * i + 10)
                     .map((question, j) => (
                       <div key={`${i}-${j}`}>
-                        <AddAnswerQuestionRow
-                          question={question}
-                          currentQuestion={currentQuestion}
-                          setCurrentQuestion={setCurrentQuestion}
-                          onChoose={onChoose}
-                        />
+                        <TestResultQuestionRow question={question} />
                       </div>
                     ))}
                 </div>
