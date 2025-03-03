@@ -2,6 +2,7 @@
 
 import { IQuestion } from "@/models/Test";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { foramttMin } from "@/utils/funcs";
 
 interface Props {
   question: IQuestion;
@@ -54,7 +55,7 @@ const TestResultQuestionRow = ({ question }: Props) => {
           .map((_, i) => renderOptionButton(i))}
       </div>
       <div>{renderIcon()}</div>
-      <div>{timeSpent}</div>
+      <div className="px-2">{foramttMin(time)}</div>
     </div>
   );
 };
