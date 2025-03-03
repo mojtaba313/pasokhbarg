@@ -31,6 +31,7 @@ export async function POST(req: Request) {
         number: startQuestion + i,
         selectedOption: 0,
         timeSpent: 0,
+        answer: 0,
       })
     );
 
@@ -68,7 +69,7 @@ export const GET = async () => {
     const result = await Test.find({ userId: session.user._id }).sort({
       createdAt: -1,
     });
-    
+
     return NextResponse.json(result);
   } catch (err) {
     console.error("Error fetching tests:", err);

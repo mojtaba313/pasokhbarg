@@ -5,6 +5,7 @@ import {
   DocumentTextIcon,
   TrashIcon,
   ArrowRightOnRectangleIcon,
+  DocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import axios from "axios";
@@ -107,7 +108,10 @@ export default function Tests() {
               key={test._id}
               className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-300 relative group"
             >
-              <div className="absolute bottom-4 left-4 flex items-center gap-2">
+              <div className="absolute bottom-4 left-4 flex flex-col items-end">
+                <Link href={`/tests/${test._id}/add-answers`}>
+                <DocumentCheckIcon width={30} className="text-green-500 m-2 hover:text-green-600"/>
+                </Link>
                 <label className="flex gap-2 cursor-pointer">
                   رویت شده :
                   <div className="flex items-center relative">
@@ -149,7 +153,7 @@ export default function Tests() {
               </button>
 
               {/* محتوای کارت */}
-              <Link href={`/tests/${test._id}`}>
+              <Link href={`/tests/${test._id}/result`}>
                 <DocumentTextIcon className="w-8 h-8 text-blue-500 mb-4" />
                 <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">
                   {test.title}

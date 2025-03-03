@@ -5,6 +5,7 @@ export interface IQuestion {
   number: number;
   selectedOption?: number;
   timeSpent: number;
+  answer: number;
 }
 
 export interface ITest extends Document {
@@ -36,16 +37,20 @@ const TestSchema = new Schema<ITest>({
   title: { type: String, required: true },
   startQuestion: { type: Number, required: true },
   endQuestion: { type: Number, required: true },
-  questions: [{
-    number: Number,
-    selectedOption: Number,
-    timeSpent: { type: Number, default: 0 }
-  }],
+  questions: [
+    {
+      number: Number,
+      selectedOption: Number,
+      answer: Number,
+      timeSpent: { type: Number, default: 0 },
+    },
+  ],
   startTime: { type: Date, default: Date.now },
   endTime: Date,
   notes: String,
   userId: { type: String, required: true },
-  viewed: { type: Boolean, default: false } // اضافه کردن فیلد viewed
+  viewed: { type: Boolean, default: false }, // اضافه کردن فیلد viewed
 });
 
-export default mongoose.models.Test || mongoose.model<ITest>("Test", TestSchema);
+export default mongoose.models.Test ||
+  mongoose.model<ITest>("Test", TestSchema);

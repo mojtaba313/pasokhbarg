@@ -6,7 +6,6 @@ import User from "@/models/User";
 import bcrypt from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
-  debug: true, // فعال‌سازی حالت دیباگ
   providers: [
     CredentialsProvider({
       name: "Credentials",
