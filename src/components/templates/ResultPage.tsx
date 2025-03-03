@@ -4,41 +4,20 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
   ArrowLeftIcon,
-  ClockIcon,
-  DocumentTextIcon,
-  ListBulletIcon,
+  CheckIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
-import Timer from "@/components/Timer";
-import QuestionNavigation from "@/components/QuestionNavigation";
-import { IQuestion } from "@/models/Test";
-import QuestionRow from "../layout/QuestionRow";
-import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
-import AddAnswerQuestionRow from "../layout/AddAnswerQuestionRow";
 import TestResultQuestionRow from "../layout/TestResultQuestionRow";
-
-interface Question {
-  number: number;
-  selectedOption?: number;
-  answer: number;
-  timeSpent: number;
-}
+import { countAnswers } from "@/utils/funcs";
+import { Question, Test } from "@/types/testTypes";
 
 interface Props {
   testID: string;
 }
 
-type Test = {
-  startTime: Date;
-  endTime: Date;
-  questions: IQuestion[];
-  id: string;
-};
-
 const ResultPage: FC<Props> = ({ testID }) => {
   const [test, setTest] = useState<Test>();
-  const [currentQuestion, setCurrentQuestion] = useState<number>(0);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
@@ -122,24 +101,43 @@ const ResultPage: FC<Props> = ({ testID }) => {
         <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
           {Array(Math.ceil(test.questions?.length / 10 || 0))
             .fill(0)
-            .map((_, i) => (
-              <div
-                key={`${i}-`}
-                className="border dark:border-slate-700 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300"
-              >
-                {/* Card Header */}
-                {/* Questions List */}
-                <div className="flex flex-col p-4 space-y-3">
-                  {test.questions
-                    .slice(10 * i, 10 * i + 10)
-                    .map((question, j) => (
-                      <div key={`${i}-${j}`}>
-                        <TestResultQuestionRow question={question} />
-                      </div>
-                    ))}
+            .map((_, i) => {
+              const questions = test.questions.slice(10 * i, 10 * i + 10);
+              const { correct, incorrect, unanswered } =
+                countAnswers(questions);
+              return (
+                <div
+                  key={`${i}-`}
+                  className="border dark:border-slate-700 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  {/* Card Header */}
+                  <div className="flex justify-between p-4 border-b dark:border-slate-700">
+                    <div className="flex gap-1 mx-1 items-center">
+                      <CheckIcon className="text-green-500" width={20} />
+                      <span>{correct}</span>
+                    </div>
+                    <div className="flex gap-1 mx-1 items-center">
+                      <XMarkIcon className="text-red-500" width={20} />
+                      <span>{incorrect}</span>
+                    </div>
+                    <div className="flex gap-1 mx-1 items-center">
+                      <div className="w-4 h-4 rounded-full border-2 border-slate-500" />
+                      <span>{unanswered}</span>
+                    </div>
+                  </div>
+                  {/* Questions List */}
+                  <div className="flex flex-col p-4 space-y-3">
+                    {test.questions
+                      .slice(10 * i, 10 * i + 10)
+                      .map((question, j) => (
+                        <div key={`${i}-${j}`}>
+                          <TestResultQuestionRow question={question} />
+                        </div>
+                      ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       </div>
     </div>

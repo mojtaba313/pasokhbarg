@@ -18,24 +18,12 @@ import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
 import AddAnswerQuestionRow from "../layout/AddAnswerQuestionRow";
 import TestResultQuestionRow from "../layout/TestResultQuestionRow";
-
-interface Question {
-  number: number;
-  selectedOption?: number;
-  answer: number;
-  timeSpent: number;
-}
+import { Question, Test } from "@/types/testTypes";
+import { countAnswers } from "@/utils/funcs";
 
 interface Props {
   testID: string;
 }
-
-type Test = {
-  startTime: Date;
-  endTime: Date;
-  questions: IQuestion[];
-  id: string;
-};
 
 const AddAnwersPage: FC<Props> = ({ testID }) => {
   const [test, setTest] = useState<Test>();
@@ -79,24 +67,6 @@ const AddAnwersPage: FC<Props> = ({ testID }) => {
     };
     setTest(newTest);
     updateTest(newTest);
-  };
-
-  const countAnswers = (questions: Question[]) => {
-    let correct = 0;
-    let incorrect = 0;
-    let unanswered = 0;
-
-    questions.forEach((q) => {
-      if (!q.selectedOption) {
-        unanswered++;
-      } else if (q.selectedOption === q.answer) {
-        correct++;
-      } else if (q.answer) {
-        incorrect++;
-      }
-    });
-
-    return { correct, incorrect, unanswered };
   };
 
   return (
