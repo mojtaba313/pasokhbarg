@@ -68,7 +68,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
   const onPause = (number: number, addingTime: number) => {
     const newTest = {
       ...test,
-      questions: test.questions?.map((q: Question) =>
+      questions: test.questions?.map((q: IQuestion) =>
         q.number === number ? { ...q, timeSpent: addingTime } : q
       ),
     };
@@ -79,7 +79,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
   const onChoose = (number: number, optionNumber: number) => {
     const newTest = {
       ...test,
-      questions: test.questions?.map((q: Question) =>
+      questions: test.questions?.map((q: IQuestion) =>
         q.number === number ? { ...q, selectedOption: optionNumber } : q
       ),
     };
