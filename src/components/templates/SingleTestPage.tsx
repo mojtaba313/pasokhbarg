@@ -14,6 +14,7 @@ import { IQuestion } from "@/models/Test";
 import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
+import KeyBoard from "../KeyBoard";
 
 interface Question {
   number: number;
@@ -135,7 +136,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
         </div>
 
         {/* Questions Container */}
-        <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
+        <div className="flex pb-32 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
           {Array(Math.ceil(test.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => (
@@ -172,6 +173,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
               </div>
             ))}
         </div>
+        <KeyBoard />
       </div>
       {/* مودال تأیید پایان */}
       <ConfirmModal

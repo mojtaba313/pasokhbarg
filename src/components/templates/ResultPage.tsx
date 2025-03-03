@@ -47,16 +47,6 @@ const ResultPage: FC<Props> = ({ testID }) => {
     if (res.status === 201) router.push("/tests");
   };
 
-  const onChoose = (number: number, answer: number) => {
-    const newTest = {
-      ...test,
-      questions: test.questions?.map((q: Question) =>
-        q.number === number ? { ...q, answer } : q
-      ),
-    };
-    setTest(newTest);
-    updateTest(newTest);
-  };
 
   return (
     <div
