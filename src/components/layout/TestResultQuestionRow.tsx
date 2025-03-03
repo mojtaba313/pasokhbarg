@@ -8,7 +8,7 @@ interface Props {
 }
 
 const TestResultQuestionRow = ({ question }: Props) => {
-  const { answer, selectedOption, number } = question;
+  const { answer, selectedOption, number, timeSpent } = question;
 
   const renderOptionButton = (i: number) => {
     const isSelected = selectedOption === i + 1;
@@ -54,6 +54,7 @@ const TestResultQuestionRow = ({ question }: Props) => {
           .map((_, i) => renderOptionButton(i))}
       </div>
       <div>{renderIcon()}</div>
+      <div>{timeSpent}</div>
     </div>
   );
 };
