@@ -20,7 +20,7 @@ const TestResultQuestionRow = ({ question }: Props) => {
         : "bg-red-500"
       : isCorrect
       ? "border-2 border-green-500"
-      : "bg-blue-400/10";
+      : "bg-blue-400/10"
       : "bg-blue-500"
     return (
       <button
