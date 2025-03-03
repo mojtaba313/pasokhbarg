@@ -13,14 +13,15 @@ const TestResultQuestionRow = ({ question }: Props) => {
   const renderOptionButton = (i: number) => {
     const isSelected = selectedOption === i + 1;
     const isCorrect = answer === i + 1;
-    const bgColor = isSelected
+    const bgColor = answer?
+      isSelected
       ? isCorrect
         ? "bg-green-500 text-white"
         : "bg-red-500"
       : isCorrect
       ? "border-2 border-green-500"
       : "bg-blue-400/10";
-
+      : "bg-blue-500"
     return (
       <button
         key={`${number}--${i}`}
