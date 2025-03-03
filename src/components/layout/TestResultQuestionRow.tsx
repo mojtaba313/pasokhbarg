@@ -55,7 +55,7 @@ const TestResultQuestionRow = ({ question }: Props) => {
           .map((_, i) => renderOptionButton(i))}
       </div>
       <div>{renderIcon()}</div>
-      <div className="px-2">{foramttMin(time)}</div>
+      <div className="px-2">{foramttMin(timeSpent)}</div>
     </div>
   );
 };
