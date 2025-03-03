@@ -171,7 +171,12 @@ const AddAnwersPage: FC<Props> = ({ testID }) => {
                   <div className="flex flex-col p-4 space-y-3">
                     {questions.map((question, j) => (
                       <div key={`${i}-${j}`}>
-                        <TestResultQuestionRow question={question} />
+                        <AddAnswerQuestionRow
+                          currentQuestion={currentQuestion}
+                          setCurrentQuestion={setCurrentQuestion}
+                          onChoose={onChoose}
+                          question={question}
+                        />
                       </div>
                     ))}
                   </div>
