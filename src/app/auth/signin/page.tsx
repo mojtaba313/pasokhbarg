@@ -24,7 +24,6 @@ export default function SignIn() {
     if (result?.error) {
       setError("نام کاربری یا رمز عبور نامعتبر است");
     } else {
-      // window.location.href = "/tests";
       router.push('/tests')
     }
   };

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import {
   XMarkIcon,
   ChevronLeftIcon,
@@ -42,11 +43,15 @@ type Props = {
 };
 
 const KeyBoard = ({ isVisible }: Props) => {
-  const [position, setPosition] = useState({
-    x: window.innerWidth / 2 - 200,
-    y: window.innerHeight - 100,
-  });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    setPosition({
+      x: window.innerWidth / 2 - 200,
+      y: window.innerHeight - 100,
+    });
+  }, []);
 
   const handleKeyClick = (key: string) => {
     const event = new KeyboardEvent("keydown", { key });
@@ -54,6 +59,8 @@ const KeyBoard = ({ isVisible }: Props) => {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (typeof window === "undefined") return;
+
     setDragging(true);
     const startX = e.clientX - position.x;
     const startY = e.clientY - position.y;
@@ -69,6 +76,7 @@ const KeyBoard = ({ isVisible }: Props) => {
     };
 
     const handleMouseUp = () => {
+      if (typeof window === "undefined") return;
       setDragging(false);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);

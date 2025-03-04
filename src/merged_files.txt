@@ -1,130 +1,149 @@
 
-the codes of file with route : /app/api/auth/[...nextauth]/route.ts
- :// app/api/tests/route.ts
-import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
-import Test from "@/models/Test";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/auth/authOptions"; // import صحیح
+the codes of file with route : /app/Provider.tsx
+ :// app/provider.tsx
+"use client"; // این خط را اضافه کنید
 
-export async function POST(req: Request) {
-  try {
-    const session = await getServerSession(authOptions); // استفاده از authOptions
-    if (!session?.user) {
-      return NextResponse.json(
-        { message: "احراز هویت نامعتبر" },
-        { status: 401 }
-      );
-    }
+import { SessionProvider } from "next-auth/react";
 
-    await connectDB();
-    const { title, startQuestion, endQuestion } = await req.json();
-
-    // اعتبارسنجی داده‌ها
-    if (!title || startQuestion < 1 || endQuestion <= startQuestion) {
-      return NextResponse.json(
-        { message: "داده‌های ورودی نامعتبر" },
-        { status: 400 }
-      );
-    }
-
-    // ایجاد آرایه سوالات
-    const questions = Array.from(
-      { length: endQuestion - startQuestion + 1 },
-      (_, i) => ({
-        number: startQuestion + i,
-        selectedOption: 0,
-        timeSpent: 0,
-      })
-    );
-
-    const test = await Test.create({
-      title,
-      startQuestion,
-      endQuestion,
-      questions,
-      userId: session.user._id,
-      viewed: false,
-    });
-
-    return NextResponse.json(test);
-  } catch (error) {
-    console.error("Error creating test:", error);
-    return NextResponse.json(
-      { message: "خطا در ایجاد آزمون" },
-      { status: 500 }
-    );
-  }
+export default function Providers({ children }: { children: React.ReactNode }) {
+  return <SessionProvider>{children}</SessionProvider>;
 }
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-export const GET = async () => {
-  try {
-    const session = await getServerSession(authOptions);
+the codes of file with route : /app/api/auth/[...nextauth]/route.ts
+ :// // app/api/tests/route.ts
+// import { NextResponse } from "next/server";
+// import connectDB from "@/lib/mongodb";
+// import Test from "@/models/Test";
+// import { getServerSession } from "next-auth";
+// import { authOptions } from "@/app/auth/authOptions"; // import صحیح
 
-    if (!session?.user) {
-      return NextResponse.json(
-        { message: "احراز هویت نامعتبر" },
-        { status: 401 }
-      );
-    }
+// export async function POST(req: Request) {
+//   try {
+//     const session = await getServerSession(authOptions); // استفاده از authOptions
+//     if (!session?.user) {
+//       return NextResponse.json(
+//         { message: "احراز هویت نامعتبر" },
+//         { status: 401 }
+//       );
+//     }
 
-    const userId = session.user._id; 
+//     await connectDB();
+//     const { title, startQuestion, endQuestion } = await req.json();
 
-    await connectDB();
-    const result = await Test.find({ userId: session.user._id }).sort({
-      createdAt: -1,
-    });
+//     // اعتبارسنجی داده‌ها
+//     if (!title || startQuestion < 1 || endQuestion <= startQuestion) {
+//       return NextResponse.json(
+//         { message: "داده‌های ورودی نامعتبر" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // ایجاد آرایه سوالات
+//     const questions = Array.from(
+//       { length: endQuestion - startQuestion + 1 },
+//       (_, i) => ({
+//         number: startQuestion + i,
+//         selectedOption: 0,
+//         timeSpent: 0,
+//       })
+//     );
+
+//     const test = await Test.create({
+//       title,
+//       startQuestion,
+//       endQuestion,
+//       questions,
+//       userId: session.user._id,
+//       viewed: false,
+//     });
+
+//     return NextResponse.json(test);
+//   } catch (error) {
+//     console.error("Error creating test:", error);
+//     return NextResponse.json(
+//       { message: "خطا در ایجاد آزمون" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+// export const GET = async () => {
+//   try {
+//     const session = await getServerSession(authOptions);
+
+//     if (!session?.user) {
+//       return NextResponse.json(
+//         { message: "احراز هویت نامعتبر" },
+//         { status: 401 }
+//       );
+//     }
+
+//     const userId = session.user._id; 
+
+//     await connectDB();
+//     const result = await Test.find({ userId: session.user._id }).sort({
+//       createdAt: -1,
+//     });
     
-    return NextResponse.json(result);
-  } catch (err) {
-    console.error("Error fetching tests:", err);
-    return NextResponse.json(
-      { message: "خطا در دریافت آزمون‌ها" },
-      { status: 500 }
-    );
-  }
-};
+//     return NextResponse.json(result);
+//   } catch (err) {
+//     console.error("Error fetching tests:", err);
+//     return NextResponse.json(
+//       { message: "خطا در دریافت آزمون‌ها" },
+//       { status: 500 }
+//     );
+//   }
+// };
 
-export const PUT = async (req: Request) => {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json(
-        { message: "احراز هویت نامعتبر" },
-        { status: 401 }
-      );
-    }
+// export const PUT = async (req: Request) => {
+//   try {
+//     const session = await getServerSession(authOptions);
+//     if (!session?.user) {
+//       return NextResponse.json(
+//         { message: "احراز هویت نامعتبر" },
+//         { status: 401 }
+//       );
+//     }
 
-    await connectDB();
-    const { testId, updates } = await req.json();
+//     await connectDB();
+//     const { testId, updates } = await req.json();
 
-    const existingTest = await Test.findOne({
-      _id: testId,
-      userId: session.user._id,
-    });
+//     const existingTest = await Test.findOne({
+//       _id: testId,
+//       userId: session.user._id,
+//     });
     
-    if (!existingTest) {
-      return NextResponse.json(
-        { message: "آزمون یافت نشد" },
-        { status: 404 }
-      );
-    }
+//     if (!existingTest) {
+//       return NextResponse.json(
+//         { message: "آزمون یافت نشد" },
+//         { status: 404 }
+//       );
+//     }
 
-    const updatedTest = await Test.findByIdAndUpdate(
-      testId,
-      updates,
-      { new: true, runValidators: true }
-    );
+//     const updatedTest = await Test.findByIdAndUpdate(
+//       testId,
+//       updates,
+//       { new: true, runValidators: true }
+//     );
 
-    return NextResponse.json(updatedTest);
-  } catch (error) {
-    console.error("Error updating test:", error);
-    return NextResponse.json(
-      { message: "خطا در به‌روزرسانی آزمون" },
-      { status: 500 }
-    );
-  }
-};
+//     return NextResponse.json(updatedTest);
+//   } catch (error) {
+//     console.error("Error updating test:", error);
+//     return NextResponse.json(
+//       { message: "خطا در به‌روزرسانی آزمون" },
+//       { status: 500 }
+//     );
+//   }
+// };
+
+// app/api/auth/[...nextauth]/route.ts
+import NextAuth from "next-auth";
+import { authOptions } from "@/app/auth/authOptions";
+
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST };
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/api/auth/signup/route.ts
@@ -133,23 +152,56 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 
+// app/api/auth/signup/route.ts
 export async function POST(req: Request) {
   try {
     await connectDB();
     const { name, username, password } = await req.json();
 
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
+    // اعتبارسنجی داده‌ها
+    if (!username || !password || !name) {
       return NextResponse.json(
-        { message: "این ایمیل قبلاً ثبت‌نام کرده است" },
+        { message: "تمامی فیلدها الزامی هستند" },
         { status: 400 }
       );
     }
 
-    await User.create({ name, username, password });
-    return NextResponse.json({ message: "ثبت‌نام موفقیت‌آمیز بود" });
-  } catch (error) {
+    // بررسی وجود کاربر با همین نام کاربری
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "این نام کاربری قبلاً ثبت‌نام کرده است" },
+        { status: 400 }
+      );
+    }
+
+    // ایجاد کاربر جدید
+    const user = await User.create({ 
+      name, 
+      username: username.toLowerCase(), // تبدیل به حروف کوچک
+      password 
+    });
+
+    return NextResponse.json({ 
+      message: "ثبت‌نام موفقیت‌آمیز بود",
+      user: {
+        id: user._id,
+        name: user.name,
+        username: user.username
+      }
+    });
+
+  } catch (error: any) {
     console.error("Error in signup:", error);
+    
+    // هندل کردن خطاهای MongoDB
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { message: "این نام کاربری قبلاً ثبت‌نام کرده است" },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { message: "خطا در ثبت‌نام" },
       { status: 500 }
@@ -222,7 +274,7 @@ export const PUT = async (
       });
     }
 
-    return new Response(JSON.stringify(user), { status: 200 });
+    return new Response(JSON.stringify(user), { status: 201 });
   } catch (error: any) {
     return new Response(JSON.stringify({ message: error.message }), {
       status: 400,
@@ -238,7 +290,7 @@ export async function DELETE(
     const id = (await params).id;
     await connectDB();
     await Test.findByIdAndDelete(id);
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, status: 203 });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to delete test" },
@@ -254,40 +306,51 @@ the codes of file with route : /app/api/tests/route.ts
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Test from "@/models/Test";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/auth/authOptions";
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json(
+        { message: "احراز هویت نامعتبر" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
     const { title, startQuestion, endQuestion } = await req.json();
 
-    // اعتبارسنجی داده‌ها
     if (!title || startQuestion < 1 || endQuestion <= startQuestion) {
       return NextResponse.json(
-        { message: "داده‌های نامعتبر" },
+        { message: "داده‌های ورودی نامعتبر" },
         { status: 400 }
       );
     }
 
-    // ایجاد آرایه سوالات
     const questions = Array.from(
       { length: endQuestion - startQuestion + 1 },
       (_, i) => ({
         number: startQuestion + i,
-        selectedOption:0,
+        selectedOption: 0,
         timeSpent: 0,
+        answer: 0,
       })
-    )
+    );
 
     const test = await Test.create({
       title,
       startQuestion,
       endQuestion,
       questions,
-      userId: "user-id", // باید از سیستم احراز هویت استفاده کنید
+      userId: session.user._id,
+      viewed: false,
     });
+
     return NextResponse.json(test);
   } catch (error) {
-    console.log("error -> ", error);
+    console.error("Error creating test:", error);
     return NextResponse.json(
       { message: "خطا در ایجاد آزمون" },
       { status: 500 }
@@ -296,16 +359,31 @@ export async function POST(req: Request) {
 }
 
 export const GET = async () => {
-  console.log("get get get -------------------------------");
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { message: "احراز هویت نامعتبر" },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
-    const result = await Test.find();
+    const result = await Test.find({ userId: session.user._id }).sort({
+      createdAt: -1,
+    });
+
     return NextResponse.json(result);
   } catch (err) {
-    console.log("error--->", err);
-    return NextResponse.json({ message: "has an error ==>", err });
+    console.error("Error fetching tests:", err);
+    return NextResponse.json(
+      { message: "خطا در دریافت آزمون‌ها" },
+      { status: 500 }
+    );
   }
 };
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/auth/authOptions.ts
@@ -317,7 +395,6 @@ import User from "@/models/User";
 import bcrypt from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
-  debug: true, // فعال‌سازی حالت دیباگ
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -388,20 +465,13 @@ the codes of file with route : /app/auth/signin/page.tsx
 import { useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const errorParam = searchParams.get("error");
-    if (errorParam) {
-      setError("خطا در ورود: " + errorParam);
-    }
-  }, [searchParams]);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -416,7 +486,7 @@ export default function SignIn() {
     if (result?.error) {
       setError("نام کاربری یا رمز عبور نامعتبر است");
     } else {
-      // window.location.href = "/tests";
+      router.push('/tests')
     }
   };
 
@@ -575,19 +645,30 @@ the codes of file with route : /app/globals.css
 }
 
 * {
-  @apply font-vazir !outline-none;
+  @apply font-vazir !outline-none transition-colors select-none;
 }
 
 body {
   @apply bg-gray-100 dark:bg-slate-900 dark:text-white;
+  cursor: url("../../public/svg/pen.svg"), auto;
+}
+
+.glass {
+  @apply isolate rounded-xl bg-slate-900/40 shadow-lg ring-1 ring-black/5;
+}
+
+.default-cursor {
+  @apply !cursor-default *:!cursor-default;
 }
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/layout.tsx
- :import type { Metadata } from "next";
+ :// app/layout.tsx
+import type { Metadata } from "next";
 import "./globals.css";
 import Settings from "../components/layout/Settings";
+import Providers from "./Provider";
 
 export const metadata: Metadata = {
   title: "اپلیکیشن پاسخبرگ",
@@ -601,11 +682,36 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body
-        className={`antialiased`}
-      >
-        {children}
-        <Settings/>
+      <body className={`antialiased`}>
+        <Providers>
+          {children}
+          <Settings />
+          {/* <AnimatedCursor
+            innerSize={70}
+            outerSize={0}
+            innerScale={1.2}
+            innerStyle={{
+              opacity: 0.2,
+              background:
+                "radial-gradient(circle, rgba(2,0,36,0.5018382352941176) 0%, rgba(9,22,121,1) 49%, rgba(115,0,255,1) 74%, rgba(124,2,219,0.3253676470588235) 86%, rgba(176,13,13,0.26934523809523814) 100%)",
+            }}
+            outerScale={5}
+            clickables={[
+              "a",
+              'input[type="text"]',
+              'input[type="email"]',
+              'input[type="number"]',
+              'input[type="submit"]',
+              'input[type="image"]',
+              "label[for]",
+              "select",
+              "textarea",
+              "button",
+              ".link",
+            ]}
+            showSystemCursor
+          /> */}
+        </Providers>
       </body>
     </html>
   );
@@ -622,58 +728,51 @@ import Link from "next/link";
 const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900">
-      <div className=" [background-image:url('/hero.png')] bg-no-repeat bg-cover">
-        <div className="max-w-7xl mx-auto py-16 bg-slate-900/60">
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
-          >
-            <h1 className="text-5xl font-bold mb-6 text-blue-600 dark:text-blue-400">
-              سیستم مدیریت آزمون‌ها
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-              ابزار حرفه‌ای برای تحلیل و مدیریت آزمون‌های آموزشی
-            </p>
+      <div className=" [background-image:url('/hero.png')] bg-no-repeat bg-cover bg-center">
+        <div className="backdrop-blur-3xl">
+          <div className="max-w-7xl mx-auto py-16 px-5">
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8 }}
+              className="text-center"
+            >
+              <h1 className="text-5xl font-bold mb-6 text-blue-600 dark:text-blue-400">
+                سیستم مدیریت آزمون‌ها
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 mt-8">
+                ابزار حرفه‌ای برای تحلیل و مدیریت آزمون‌های آموزشی
+              </p>
 
-            <div className="flex justify-center items-center gap-4">
-              {/* <motion.img
-                src="/hero.png"
-                alt="Exam Illustration"
-                className="mb-12 max-w-52 rounded-lg overflow-hidden rotate-45"
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 1 }}
-              /> */}
-
-              <div className="flex justify-center gap-4">
-                <Link
-                  href="/tests"
-                  className="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors text-lg"
-                >
-                  شروع کنید
-                </Link>
+              <div className="flex justify-center items-center gap-4">
+                <div className="flex justify-center gap-4">
+                  <Link
+                    href="/tests"
+                    className="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors text-lg"
+                  >
+                    شروع کنید
+                  </Link>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 mt-24">
-            {feachers.map((feature, idx) => (
-              <motion.div
-                key={idx}
-                className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg"
-                whileHover={{ y: -5 }}
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8 }}
-              >
-                <h3 className="text-xl font-semibold mb-4">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  {feature.desc}
-                </p>
-              </motion.div>
-            ))}
+            <div className="grid md:grid-cols-3 gap-8 mt-24">
+              {feachers.map((feature, idx) => (
+                <motion.div
+                  key={idx}
+                  whileHover={{ y: -5 }}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  className="glass p-6 rounded-xl shadow-lg hover:!-translate-y-3 hover:!delay-0 !transition-transform duration-500"
+                  transition={{ duration: 0.8, delay: 0.5 }}
+                >
+                  <h3 className="text-xl font-semibold mb-4 !text-white">
+                    {feature.title}
+                  </h3>
+                  <p className="!text-gray-300">{feature.desc}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -682,6 +781,20 @@ const Home = () => {
 };
 
 export default Home;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/tests/[id]/add-answers/page.tsx
+ :"use server";
+import AddAnwersPage from "@/components/templates/AddAnwersPage";
+import React from "react";
+
+const TestPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const id = (await params).id;
+  return <AddAnwersPage testID={id} />;
+};
+
+export default TestPage;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -699,6 +812,21 @@ export default TestPage;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /app/tests/[id]/result/page.tsx
+ :"use server";
+import AddAnwersPage from "@/components/templates/AddAnwersPage";
+import ResultPage from "@/components/templates/ResultPage";
+import React from "react";
+
+const TestResultPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const id = (await params).id;
+  return <ResultPage testID={id} />;
+};
+
+export default TestResultPage;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /app/tests/page.tsx
  :"use client";
 import { useState, useEffect } from "react";
@@ -707,6 +835,7 @@ import {
   DocumentTextIcon,
   TrashIcon,
   ArrowRightOnRectangleIcon,
+  DocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import axios from "axios";
@@ -714,8 +843,11 @@ import CreateTestModal from "@/components/CreateTestModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import { ITest, IntermediateTest } from "@/models/Test";
 import { Loader } from "@/components/Loader";
+import { useSession } from "next-auth/react";
 
 import { signOut } from "next-auth/react"; // Import تابع signOut
+import { useRouter } from "next/navigation";
+import { Session } from "next-auth";
 
 export default function Tests() {
   const [tests, setTests] = useState<IntermediateTest[]>([]);
@@ -723,15 +855,27 @@ export default function Tests() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [testToDelete, setTestToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  // const [session, setSession] = useState<Session>();
+  const session = useSession();
 
   useEffect(() => {
+    const checkSession = async () => {
+      if (session.status !== "loading" && !session.data) {
+        router.push("/auth/signin");
+      } else {
+        fetchTests();
+      }
+    };
+
     const fetchTests = async () => {
       const { data } = await axios.get("/api/tests");
       setTests(data);
       setIsLoading(false);
     };
-    fetchTests();
-  }, []);
+
+    checkSession();
+  }, [session]);
 
   const handleDeleteTest = async () => {
     if (!testToDelete) return;
@@ -794,7 +938,10 @@ export default function Tests() {
               key={test._id}
               className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-300 relative group"
             >
-              <div className="absolute bottom-4 left-4 flex items-center gap-2">
+              <div className="absolute bottom-4 left-4 flex flex-col items-end">
+                <Link href={`/tests/${test._id}/add-answers`}>
+                <DocumentCheckIcon width={30} className="text-green-500 m-2 hover:text-green-600"/>
+                </Link>
                 <label className="flex gap-2 cursor-pointer">
                   رویت شده :
                   <div className="flex items-center relative">
@@ -836,7 +983,7 @@ export default function Tests() {
               </button>
 
               {/* محتوای کارت */}
-              <Link href={`/tests/${test._id}`}>
+              <Link href={`/tests/${test._id}/result`}>
                 <DocumentTextIcon className="w-8 h-8 text-blue-500 mb-4" />
                 <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">
                   {test.title}
@@ -995,7 +1142,7 @@ export default function ConfirmModal({
               }}
               className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
             >
-              حذف
+              تایید
             </button>
           </div>
         </div>
@@ -1161,10 +1308,125 @@ export default function CreateTestModal({
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /components/KeyBoard.tsx
+ :'use client'
+import React, { useState } from "react";
+import {
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
+
+let i = 0;
+const keys = [
+  { id: i++, title: "1", key: "1" },
+  { id: i++, title: "2", key: "2" },
+  { id: i++, title: "3", key: "3" },
+  { id: i++, title: "4", key: "4" },
+  {
+    id: i++,
+    title: "0",
+    key: "0",
+    icon: <div className="w-6 h-6 rounded-full border-2 border-slate-950" />,
+  },
+  {
+    id: i++,
+    title: "back",
+    key: "Backspace",
+    icon: <XMarkIcon className="h-6 w-6" />,
+  },
+  {
+    id: i++,
+    title: "",
+    key: "ArrowLeft",
+    icon: <ChevronLeftIcon className="h-6 w-6" />,
+  },
+  {
+    id: i++,
+    title: "",
+    key: "ArrowRight",
+    icon: <ChevronRightIcon className="h-6 w-6" />,
+  },
+];
+
+type Props = {
+  isVisible: boolean;
+};
+
+const KeyBoard = ({ isVisible }: Props) => {
+  const [position, setPosition] = useState({
+    x: window.innerWidth / 2 - 200,
+    y: window.innerHeight - 100,
+  });
+  const [dragging, setDragging] = useState(false);
+
+  const handleKeyClick = (key: string) => {
+    const event = new KeyboardEvent("keydown", { key });
+    window.dispatchEvent(event);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setDragging(true);
+    const startX = e.clientX - position.x;
+    const startY = e.clientY - position.y;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      console.log(dragging, e);
+      // if (dragging) {
+      setPosition({
+        x: e.clientX - startX,
+        y: e.clientY - startY,
+      });
+      // }
+    };
+
+    const handleMouseUp = () => {
+      setDragging(false);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  return (
+    <>
+      <div
+        className="glass group flex justify-center items-center backdrop-blur absolute transition duration-300 ease-in-out"
+        style={{
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          cursor: dragging ? "grabbing" : "grab",
+          display: isVisible ? "block" : "none",
+        }}
+        onMouseDown={handleMouseDown}
+      >
+        <button className="absolute glass bottom-full w-12 h-12 left-0 !rounded-br-none"></button>
+        <div className="grid grid-cols-4 items-center justify-center gap-2 p-4 max-w-[30rem]">
+          {keys.map((key) => (
+            <button
+              key={key.id}
+              onClick={() => handleKeyClick(key.key)}
+              className="bg-white/50 min-w-20 text-black p-2 rounded-md shadow-md hover:bg-blue-600/50 hover:text-white flex items-center justify-center transition duration-300 ease-in-out"
+            >
+              {key.icon || key.title}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default KeyBoard;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /components/Loader.tsx
  :// components/Loader.tsx
 export const Loader = () => (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div className="fixed inset-0 bg-slate-800 flex items-center justify-center z-50">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
   </div>
 );
@@ -1324,6 +1586,114 @@ export default function Timer({ startTime, endTime }: TimerProps) {
 }
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /components/layout/AddAnswerQuestionRow.tsx
+ :"use client";
+
+import { IQuestion } from "@/models/Test";
+import { foramttMin } from "@/utils/funcs";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
+interface Props {
+  question: IQuestion;
+  currentQuestion: number;
+  setCurrentQuestion: Dispatch<SetStateAction<number>>;
+  onChoose: (number: number, optionNumber: number) => void;
+}
+
+const AddAnswerQuestionRow = ({
+  question,
+  currentQuestion,
+  setCurrentQuestion,
+  onChoose,
+}: Props) => {
+  const isCurrent: boolean = question.number === currentQuestion;
+
+  const setThisOneAsCurrentQuestion = () =>
+    isCurrent ? setCurrentQuestion(0) : setCurrentQuestion(question.number);
+
+  const handleOptionChoose = (index: number) =>
+    index + 1 === question.answer
+      ? onChoose(question.number, 0)
+      : onChoose(question.number, index + 1);
+
+  const handleUserKeyPress = (e: KeyboardEvent) => {
+    const { key } = e;
+    if (
+      [
+        "1",
+        "2",
+        "3",
+        "4",
+        "ArrowDown",
+        "Enter",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowLeft",
+        "Backspace",
+      ].includes(key)
+    )
+      e.preventDefault();
+    if (["1", "2", "3", "4"].includes(key)) {
+      onChoose(question.number, Number(key));
+      setCurrentQuestion((prev) => prev + 1);
+    } else if (["ArrowDown", "Enter", "ArrowRight"].includes(key)) {
+      setCurrentQuestion((prev) => prev + 1);
+    } else if (["ArrowUp", "ArrowLeft"].includes(key)) {
+      setCurrentQuestion((prev) => prev - 1);
+    }
+  };
+
+  useEffect(() => {
+    if (isCurrent) window.addEventListener("keydown", handleUserKeyPress);
+
+    return () => {
+      window.removeEventListener("keydown", handleUserKeyPress);
+    };
+  });
+
+  return (
+    <div
+      className={`flex items-center rounded-md ${
+        isCurrent ? "bg-blue-500/10" : ""
+      }`}
+    >
+      <button
+        className="hover:bg-blue-500/20 flex justify-center items-center px-2 transition-colors rounded place-self-stretch"
+        onClick={setThisOneAsCurrentQuestion}
+      >
+        {isCurrent ? "✨" : question.number}
+      </button>
+      <div className="flex gap-1 p-2 pl-0">
+        {Array(4)
+          .fill(0)
+          .map((_, i) => (
+            <button
+              onClick={() => handleOptionChoose(i)}
+              key={`${question.number}--${i}`}
+              className={`w-9 h-7 p-0 rounded-full cursor-pointer ${
+                question.answer === i + 1
+                  ? "bg-blue-500 text-white"
+                  : "bg-blue-400/10"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+      </div>
+    </div>
+  );
+};
+
+export default AddAnswerQuestionRow;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /components/layout/QuestionRow.tsx
  :"use client";
 
@@ -1463,12 +1833,23 @@ export default QuestionRow;
 the codes of file with route : /components/layout/Settings.tsx
  :"use client";
 
-import { Cog6ToothIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import {
+  Cog6ToothIcon,
+  CursorArrowRaysIcon,
+  CursorArrowRippleIcon,
+  MoonIcon,
+  SunIcon,
+  WindowIcon,
+} from "@heroicons/react/24/outline";
 import React, { useState, useEffect } from "react";
+import AnimatedCursor from "react-animated-cursor";
+import KeyBoard from "../KeyBoard";
 
 const Settings = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [mouseRipple, setMouseRipple] = useState(true);
+  const [isKeyBoardVisible, setIsKeyBoardVisible] = useState(false);
 
   // بررسی حالت سیستم عامل و localStorage هنگام لود صفحه
   useEffect(() => {
@@ -1479,6 +1860,10 @@ const Settings = () => {
 
     setDarkMode(isDarkMode);
     updateDarkMode(isDarkMode);
+
+    const isMouseRipple = localStorage.mouse !== "no-ripple";
+    setMouseRipple(isMouseRipple);
+    updateMouseRipple(isMouseRipple);
   }, []);
 
   // اعمال تغییرات دارک مود به HTML
@@ -1492,12 +1877,31 @@ const Settings = () => {
     }
   };
 
+  const updateMouseRipple = (isRipple: boolean) => {
+    if (isRipple) {
+      localStorage.mouse = "ripple";
+      document.body.classList.remove("default-cursor");
+    } else {
+      localStorage.mouse = "no-ripple";
+      document.body.classList.add("default-cursor");
+    }
+  };
+
   // تغییر حالت دارک مود
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
     updateDarkMode(newDarkMode);
   };
+
+  const toggleMouseRipple = () => {
+    setMouseRipple((prev) => {
+      updateMouseRipple(!prev);
+      return !prev;
+    });
+  };
+
+  const toggleKeyBoard = () => setIsKeyBoardVisible((prev) => !prev);
 
   return (
     <>
@@ -1506,13 +1910,18 @@ const Settings = () => {
         className="fixed bottom-4 left-4 rounded-full text-blue-600 bg-white dark:bg-gray-800 shadow-lg flex justify-center items-center w-14 h-14 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 transition-all duration-300 z-50"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <Cog6ToothIcon width={30} className="text-blue-600 dark:text-blue-400" />
+        <Cog6ToothIcon
+          width={30}
+          className="text-blue-600 dark:text-blue-400"
+        />
       </div>
 
       {/* پنل تنظیمات */}
       <div
-        className={`fixed bottom-20 left-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg p-4 space-y-4 transition-all duration-300 ${
-          isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+        className={`fixed z-30 bottom-20 left-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg p-4 space-y-4 transition-all duration-300 ${
+          isOpen
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-4 pointer-events-none"
         }`}
       >
         {/* دکمه تغییر دارک مود */}
@@ -1528,16 +1937,455 @@ const Settings = () => {
           )}
         </button>
 
-        {/* سایر تنظیمات (می‌توانید اضافه کنید) */}
-        {/* <button className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-          <YourIcon width={24} className="text-gray-800 dark:text-gray-200" />
-        </button> */}
+        {/* Mouse */}
+        <button
+          className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          onClick={toggleMouseRipple}
+          aria-label="Toggle dark mode"
+        >
+          {mouseRipple ? (
+            <CursorArrowRaysIcon
+              width={24}
+              className="text-gray-800 dark:text-gray-200"
+            />
+          ) : (
+            <CursorArrowRippleIcon width={24} className="text-yellow-400" />
+          )}
+        </button>
+
+        {/* KeyBoard */}
+        <button
+          className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          onClick={toggleKeyBoard}
+          aria-label="Toggle dark mode"
+        >
+          <WindowIcon
+            width={24}
+            className={`${
+              isKeyBoardVisible
+                ? "text-gray-800 dark:text-gray-200"
+                : "text-yellow-400"
+            }`}
+          />
+        </button>
       </div>
+      {mouseRipple ? (
+        <AnimatedCursor
+          showSystemCursor
+          // showSystemCursor={!mouseRipple}
+          innerSize={12}
+          outerSize={24}
+          color="#002fff41"
+          outerAlpha={0.5}
+          innerScale={0.8}
+          outerScale={4}
+          innerStyle={{
+            backgroundColor: "#002fff",
+            borderRadius: "50%",
+            animation: "pulse 1.5s infinite",
+          }}
+          outerStyle={{
+            border: "2px solid #002fff",
+            // animation: 'spin 2s linear infinite'
+          }}
+          clickables={[
+            "a",
+            "input[type='text']",
+            "input[type='email']",
+            "input[type='number']",
+            "input[type='submit']",
+            "input[type='image']",
+            "label[for]",
+            "select",
+            "textarea",
+            "button",
+            ".link",
+          ]}
+        />
+      ) : (
+        <div className="default-cursor"></div>
+      )}
+
+      <KeyBoard isVisible={isKeyBoardVisible} />
     </>
   );
 };
 
 export default Settings;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/layout/TestResultQuestionRow.tsx
+ :"use client";
+
+import { IQuestion } from "@/models/Test";
+import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { foramttMin } from "@/utils/funcs";
+
+interface Props {
+  question: IQuestion;
+}
+
+const TestResultQuestionRow = ({ question }: Props) => {
+  const { answer, selectedOption, number, timeSpent } = question;
+
+  const renderOptionButton = (i: number) => {
+    const isSelected = selectedOption === i + 1;
+    const isCorrect = answer === i + 1;
+    const bgColor = answer?
+      isSelected
+      ? isCorrect
+        ? "bg-green-500 text-white"
+        : "bg-red-500"
+      : isCorrect
+      ? "border-2 border-green-500"
+      : "bg-blue-400/10"
+      : isSelected
+      ? "bg-blue-500"
+      :"bg-blue-400/10"
+    return (
+      <button
+        key={`${number}--${i}`}
+        className={`w-9 h-7 p-0 rounded-full cursor-pointer ${bgColor}`}
+      >
+        {i + 1}
+      </button>
+    );
+  };
+
+  const renderIcon = () => {
+    if (!answer) return null;
+    if (!selectedOption)
+      return <div className="w-4 h-4 rounded-full border-2 border-slate-500" />;
+    if (selectedOption === answer)
+      return <CheckIcon className="text-green-500" width={20} />;
+    return <XMarkIcon className="text-red-500" width={20} />;
+  };
+
+  return (
+    <div className="flex items-center rounded-md">
+      <button className="hover:bg-blue-500/20 flex justify-center items-center min-w-10 px-2 transition-colors rounded place-self-stretch">
+        {number}
+      </button>
+      <div className="flex gap-1 p-2 pl-0">
+        {Array(4)
+          .fill(0)
+          .map((_, i) => renderOptionButton(i))}
+      </div>
+      <div>{renderIcon()}</div>
+      <div className="px-2">{foramttMin(timeSpent)}</div>
+    </div>
+  );
+};
+
+export default TestResultQuestionRow;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/templates/AddAnwersPage.tsx
+ :"use client";
+import { useState, useEffect, FC } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  ListBulletIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import Timer from "@/components/Timer";
+import QuestionNavigation from "@/components/QuestionNavigation";
+import { IQuestion } from "@/models/Test";
+import QuestionRow from "../layout/QuestionRow";
+import ConfirmModal from "../ConfirmModal";
+import { Loader } from "../Loader";
+import AddAnswerQuestionRow from "../layout/AddAnswerQuestionRow";
+import TestResultQuestionRow from "../layout/TestResultQuestionRow";
+import { Question, Test } from "@/types/testTypes";
+import { countAnswers } from "@/utils/funcs";
+
+interface Props {
+  testID: string;
+}
+
+const AddAnwersPage: FC<Props> = ({ testID }) => {
+  const [test, setTest] = useState<Test>();
+  const [currentQuestion, setCurrentQuestion] = useState<number>(1);
+  const [isFetchingData, setIsFetchingData] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchTest = async () => {
+      const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
+      setTest(data);
+    };
+
+    fetchTest();
+  }, [testID]);
+
+  const updateTest = async (newData?: Test) => {
+    setIsFetchingData(true);
+    const res = await axios.put(`/api/tests/${testID}`, newData || test);
+    if (res.status === 201) setIsFetchingData(false);
+  };
+
+  if (!test) return <Loader />;
+
+  const handleEndTest = async () => {
+    const res = await axios.put(`/api/tests/${testID}`, {
+      endTime: new Date(),
+      questions: test.questions,
+    });
+
+    if (res.status === 201) router.push("/tests");
+  };
+
+  const onChoose = (number: number, answer: number) => {
+    const newTest = {
+      ...test,
+      questions: test.questions?.map((q: Question) =>
+        q.number === number ? { ...q, answer } : q
+      ),
+    };
+    setTest(newTest);
+    updateTest(newTest);
+  };
+
+  return (
+    <div
+      className="min-h-screen w-screen h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+      dir="ltr"
+    >
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="hidden xs:flex items-center justify-between p-8 h-20 bg-white dark:bg-gray-800 shadow-sm">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+            بازگشت
+          </button>
+
+          <div className="flex items-center justify-center">
+            <div role="status" className={!isFetchingData ? "invisible" : ""}>
+              <svg
+                aria-hidden="true"
+                className="w-6 h-6 mx-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                viewBox="0 0 100 101"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                  fill="currentFill"
+                />
+              </svg>
+              <span className="sr-only">Loading...</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Questions Container */}
+        <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
+          {Array(Math.ceil(test.questions?.length / 10 || 0))
+            .fill(0)
+            .map((_, i) => {
+              const questions = test.questions.slice(10 * i, 10 * i + 10);
+              const { correct, incorrect, unanswered } =
+                countAnswers(questions);
+
+              return (
+                <div
+                  key={`${i}-`}
+                  className="border dark:border-slate-700 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  {/* Card Header */}
+                  <div className="flex justify-between p-4 border-b dark:border-slate-700">
+                    <div className="flex gap-1 mx-1 items-center">
+                      <CheckIcon className="text-green-500" width={20} />
+                      <span>{correct}</span>
+                    </div>
+                    <div className="flex gap-1 mx-1 items-center">
+                      <XMarkIcon className="text-red-500" width={20} />
+                      <span>{incorrect}</span>
+                    </div>
+                    <div className="flex gap-1 mx-1 items-center">
+                      <div className="w-4 h-4 rounded-full border-2 border-slate-500" />
+                      <span>{unanswered}</span>
+                    </div>
+                  </div>
+                  {/* Questions List */}
+                  <div className="flex flex-col p-4 space-y-3">
+                    {questions.map((question, j) => (
+                      <div key={`${i}-${j}`}>
+                        <AddAnswerQuestionRow
+                          currentQuestion={currentQuestion}
+                          setCurrentQuestion={setCurrentQuestion}
+                          onChoose={onChoose}
+                          question={question}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AddAnwersPage;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/templates/ResultPage.tsx
+ :"use client";
+import { useState, useEffect, useCallback, FC } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { Loader } from "../Loader";
+import TestResultQuestionRow from "../layout/TestResultQuestionRow";
+import { countAnswers } from "@/utils/funcs";
+import { Question, Test } from "@/types/testTypes";
+
+interface Props {
+  testID: string;
+}
+
+const ResultPage: FC<Props> = ({ testID }) => {
+  const [test, setTest] = useState<Test>();
+  const [isFetchingData, setIsFetchingData] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchTest = async () => {
+      const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
+      setTest(data);
+    };
+
+    fetchTest();
+  }, [testID]);
+
+  const updateTest = async (newData?: Test) => {
+    setIsFetchingData(true);
+    const res = await axios.put(`/api/tests/${testID}`, newData || test);
+    if (res.status === 201) setIsFetchingData(false);
+  };
+
+  if (!test) return <Loader />;
+
+  const handleEndTest = async () => {
+    const res = await axios.put(`/api/tests/${testID}`, {
+      endTime: new Date(),
+      questions: test.questions,
+    });
+
+    if (res.status === 201) router.push("/tests");
+  };
+
+
+  return (
+    <div
+      className="min-h-screen w-screen h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+      dir="ltr"
+    >
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="hidden xs:flex items-center justify-between p-8 h-20 bg-white dark:bg-gray-800 shadow-sm">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+            بازگشت
+          </button>
+
+          <div className="flex items-center justify-center">
+            <div role="status" className={!isFetchingData ? "invisible" : ""}>
+              <svg
+                aria-hidden="true"
+                className="w-6 h-6 mx-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                viewBox="0 0 100 101"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                  fill="currentFill"
+                />
+              </svg>
+              <span className="sr-only">Loading...</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Questions Container */}
+        <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
+          {Array(Math.ceil(test.questions?.length / 10 || 0))
+            .fill(0)
+            .map((_, i) => {
+              const questions = test.questions.slice(10 * i, 10 * i + 10);
+              const { correct, incorrect, unanswered } =
+                countAnswers(questions);
+              return (
+                <div
+                  key={`${i}-`}
+                  className="border dark:border-slate-700 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  {/* Card Header */}
+                  <div className="flex justify-between p-4 border-b dark:border-slate-700">
+                    <div className="flex gap-1 mx-1 items-center">
+                      <CheckIcon className="text-green-500" width={20} />
+                      <span>{correct}</span>
+                    </div>
+                    <div className="flex gap-1 mx-1 items-center">
+                      <XMarkIcon className="text-red-500" width={20} />
+                      <span>{incorrect}</span>
+                    </div>
+                    <div className="flex gap-1 mx-1 items-center">
+                      <div className="w-4 h-4 rounded-full border-2 border-slate-500" />
+                      <span>{unanswered}</span>
+                    </div>
+                  </div>
+                  {/* Questions List */}
+                  <div className="flex flex-col p-4 space-y-3">
+                    {test.questions
+                      .slice(10 * i, 10 * i + 10)
+                      .map((question, j) => (
+                        <div key={`${i}-${j}`}>
+                          <TestResultQuestionRow question={question} />
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ResultPage;
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /components/templates/SingleTestPage.tsx
@@ -1557,6 +2405,7 @@ import { IQuestion } from "@/models/Test";
 import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
+import KeyBoard from "../KeyBoard";
 
 interface Question {
   number: number;
@@ -1577,8 +2426,9 @@ type Test = {
 
 const SingleTestPage: FC<Props> = ({ testID }) => {
   const [test, setTest] = useState<Test>();
-  const [currentQuestion, setCurrentQuestion] = useState<number>(0);
+  const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -1590,21 +2440,27 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
     fetchTest();
   }, [testID]);
 
-  const updateTest = async (newData?: Test) =>
-    await axios.put(`/api/tests/${testID}`, newData || test);
+  const updateTest = async (newData?: Test) => {
+    setIsFetchingData(true);
+    const res = await axios.put(`/api/tests/${testID}`, newData || test);
+    if (res.status === 201) setIsFetchingData(false);
+  };
 
   if (!test) return <Loader />;
 
-  const handleEndTest = async () =>
-    await axios.put(`/api/tests/${testID}`, {
+  const handleEndTest = async () => {
+    const res = await axios.put(`/api/tests/${testID}`, {
       endTime: new Date(),
       questions: test.questions,
     });
 
+    if (res.status === 201) router.push("/tests");
+  };
+
   const onPause = (number: number, addingTime: number) => {
     const newTest = {
       ...test,
-      questions: test.questions?.map((q: Question) =>
+      questions: test.questions?.map((q: IQuestion) =>
         q.number === number ? { ...q, timeSpent: addingTime } : q
       ),
     };
@@ -1615,7 +2471,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
   const onChoose = (number: number, optionNumber: number) => {
     const newTest = {
       ...test,
-      questions: test.questions?.map((q: Question) =>
+      questions: test.questions?.map((q: IQuestion) =>
         q.number === number ? { ...q, selectedOption: optionNumber } : q
       ),
     };
@@ -1624,7 +2480,10 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
   };
 
   return (
-    <div className="min-h-screen w-screen h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300" dir="ltr">
+    <div
+      className="min-h-screen w-screen h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+      dir="ltr"
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="hidden xs:flex items-center justify-between p-8 h-20 bg-white dark:bg-gray-800 shadow-sm">
@@ -1638,16 +2497,37 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
 
           <Timer startTime={test.startTime} endTime={test.endTime} />
 
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors shadow-lg hover:shadow-red-500/50"
-          >
-            پایان آزمون
-          </button>
+          <div className="flex items-center justify-center">
+            <div role="status" className={!isFetchingData ? "invisible" : ""}>
+              <svg
+                aria-hidden="true"
+                className="w-4 h-4 mx-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                viewBox="0 0 100 101"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                  fill="currentFill"
+                />
+              </svg>
+              <span className="sr-only">Loading...</span>
+            </div>
+            <button
+              onClick={() => setShowConfirmModal(true)}
+              className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors shadow-lg hover:shadow-red-500/50"
+            >
+              پایان آزمون
+            </button>
+          </div>
         </div>
 
         {/* Questions Container */}
-        <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
+        <div className="flex pb-32 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
           {Array(Math.ceil(test.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => (
@@ -1764,6 +2644,7 @@ export interface IQuestion {
   number: number;
   selectedOption?: number;
   timeSpent: number;
+  answer: number;
 }
 
 export interface ITest extends Document {
@@ -1795,19 +2676,24 @@ const TestSchema = new Schema<ITest>({
   title: { type: String, required: true },
   startQuestion: { type: Number, required: true },
   endQuestion: { type: Number, required: true },
-  questions: [{
-    number: Number,
-    selectedOption: Number,
-    timeSpent: { type: Number, default: 0 }
-  }],
+  questions: [
+    {
+      number: Number,
+      selectedOption: Number,
+      answer: Number,
+      timeSpent: { type: Number, default: 0 },
+    },
+  ],
   startTime: { type: Date, default: Date.now },
   endTime: Date,
   notes: String,
   userId: { type: String, required: true },
-  viewed: { type: Boolean, default: false } // اضافه کردن فیلد viewed
+  viewed: { type: Boolean, default: false }, // اضافه کردن فیلد viewed
 });
 
-export default mongoose.models.Test || mongoose.model<ITest>("Test", TestSchema);
+export default mongoose.models.Test ||
+  mongoose.model<ITest>("Test", TestSchema);
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /models/User.ts
@@ -1824,26 +2710,35 @@ export interface IUser extends Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
+// models/User.ts
 const UserSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
-    username: { type: String, required: true, unique: true }, // فیلد منحصربه‌فرد
+    username: { type: String, required: true, unique: true }, // تغییر این خط
     password: { type: String, required: true },
   },
   { timestamps: true }
 );
 
 // Hash password قبل از ذخیره کاربر
+// UserSchema.pre<IUser>("save", async function (next) {
+//   if (!this.isModified("password")) return next();
+
+//   try {
+//     const salt = await bcrypt.genSalt(10);
+//     this.password = await bcrypt.hash(this.password, salt);
+//     next();
+//   } catch (error) {
+//     next(error as Error);
+//   }
+// });
+
 UserSchema.pre<IUser>("save", async function (next) {
   if (!this.isModified("password")) return next();
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error as Error);
-  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // متد برای مقایسه پسورد
@@ -1891,10 +2786,48 @@ declare module "next-auth/jwt" {
 }
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /types/testTypes.ts
+ :import { IQuestion } from "@/models/Test";
+
+export interface Question {
+  number: number;
+  selectedOption?: number;
+  answer: number;
+  timeSpent: number;
+}
+export type Test = {
+  startTime: Date;
+  endTime: Date;
+  questions: IQuestion[];
+  id: string;
+};
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /utils/funcs.ts
- :export const foramttMin = (seconds: number) =>
+ :import { Question } from "@/types/testTypes";
+
+export const foramttMin = (seconds: number) =>
   `${Math.floor(seconds / 60)
     .toString()
     .padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`;
+
+export const countAnswers = (questions: Question[]) => {
+  let correct = 0;
+  let incorrect = 0;
+  let unanswered = 0;
+
+  questions.forEach((q) => {
+    if (!q.selectedOption) {
+      unanswered++;
+    } else if (q.selectedOption === q.answer) {
+      correct++;
+    } else if (q.answer) {
+      incorrect++;
+    }
+  });
+
+  return { correct, incorrect, unanswered };
+};
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
