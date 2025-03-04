@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Settings from "../components/layout/Settings";
 import Providers from "./Provider";
-import AnimatedCursor from "react-animated-cursor";
-import PenSVG from "../../public/svg/pen.svg";
 
 export const metadata: Metadata = {
   title: "اپلیکیشن پاسخبرگ",
@@ -47,37 +45,6 @@ export default function RootLayout({
             ]}
             showSystemCursor
           /> */}
-
-          <AnimatedCursor
-            innerSize={12}
-            outerSize={24}
-            color="#002fff41"
-            outerAlpha={0.5}
-            innerScale={0.8}
-            outerScale={4}
-            innerStyle={{
-              backgroundColor: "#002fff",
-              borderRadius: "50%",
-              animation: "pulse 1.5s infinite",
-            }}
-            outerStyle={{
-              border: "2px solid #002fff",
-              // animation: 'spin 2s linear infinite'
-            }}
-            clickables={[
-              "a",
-              "input[type='text']",
-              "input[type='email']",
-              "input[type='number']",
-              "input[type='submit']",
-              "input[type='image']",
-              "label[for]",
-              "select",
-              "textarea",
-              "button",
-              ".link",
-            ]}
-          />
         </Providers>
       </body>
     </html>

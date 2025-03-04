@@ -18,7 +18,7 @@
 }
 
 * {
-  @apply font-vazir !outline-none transition-colors;
+  @apply font-vazir !outline-none transition-colors select-none;
 }
 
 body {
@@ -28,4 +28,8 @@ body {
 
 .glass {
   @apply isolate rounded-xl bg-slate-900/40 shadow-lg ring-1 ring-black/5;
+}
+
+.default-cursor {
+  @apply !cursor-default *:!cursor-default;
 }

@@ -1,11 +1,8 @@
 import React, { useState } from "react";
 import {
   XMarkIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  WindowIcon,
 } from "@heroicons/react/24/outline";
 
 let i = 0;
@@ -29,18 +26,6 @@ const keys = [
   {
     id: i++,
     title: "",
-    key: "ArrowUp",
-    icon: <ChevronUpIcon className="h-6 w-6" />,
-  },
-  {
-    id: i++,
-    title: "",
-    key: "ArrowDown",
-    icon: <ChevronDownIcon className="h-6 w-6" />,
-  },
-  {
-    id: i++,
-    title: "",
     key: "ArrowLeft",
     icon: <ChevronLeftIcon className="h-6 w-6" />,
   },
@@ -52,33 +37,61 @@ const keys = [
   },
 ];
 
-const KeyBoard = () => {
-  const [isVisible, setIsVisible] = useState(true);
+type Props = {
+  isVisible: boolean;
+};
+
+const KeyBoard = ({ isVisible }: Props) => {
+  const [position, setPosition] = useState({
+    x: window.innerWidth / 2 - 200,
+    y: window.innerHeight - 100,
+  });
+  const [dragging, setDragging] = useState(false);
 
   const handleKeyClick = (key: string) => {
     const event = new KeyboardEvent("keydown", { key });
     window.dispatchEvent(event);
   };
 
-  const toggleVisibility = () => {
-    setIsVisible(!isVisible);
-  };
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setDragging(true);
+    const startX = e.clientX - position.x;
+    const startY = e.clientY - position.y;
 
-  if (!isVisible) {
-    return (
-      <button
-        onClick={toggleVisibility}
-        className="fixed bottom-4 right-4 bg-blue-500 text-white p-2 rounded-md shadow-md hover:bg-blue-600 transition duration-300"
-      >
-        <WindowIcon width={30} />
-      </button>
-    );
-  }
+    const handleMouseMove = (e: MouseEvent) => {
+      console.log(dragging, e);
+      // if (dragging) {
+      setPosition({
+        x: e.clientX - startX,
+        y: e.clientY - startY,
+      });
+      // }
+    };
+
+    const handleMouseUp = () => {
+      setDragging(false);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
 
   return (
     <>
-      <div className="glass group flex justify-center items-center backdrop-blur w-full fixed bottom-0 transition duration-300 ease-in-out">
-        <div className="grid grid-cols-5 items-center justify-center gap-2 p-4 max-w-[30rem]">
+      <div
+        className="glass group flex justify-center items-center backdrop-blur absolute transition duration-300 ease-in-out"
+        style={{
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          cursor: dragging ? "grabbing" : "grab",
+          display: isVisible ? "block" : "none",
+        }}
+        onMouseDown={handleMouseDown}
+      >
+        <button className="absolute glass bottom-full w-12 h-12 left-0 !rounded-br-none"></button>
+        <div className="grid grid-cols-4 items-center justify-center gap-2 p-4 max-w-[30rem]">
           {keys.map((key) => (
             <button
               key={key.id}
@@ -89,12 +102,6 @@ const KeyBoard = () => {
             </button>
           ))}
         </div>
-        <button
-          onClick={toggleVisibility}
-          className="absolute invisible group-hover:visible bottom-0 left-10 bg-red-500/10 text-white p-2 rounded-md shadow-md hover:bg-red-600 transition duration-300"
-        >
-          <XMarkIcon width={30} />
-        </button>
       </div>
     </>
   );
