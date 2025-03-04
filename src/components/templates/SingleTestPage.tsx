@@ -35,7 +35,7 @@ type Test = {
 
 const SingleTestPage: FC<Props> = ({ testID }) => {
   const [test, setTest] = useState<Test>();
-  const [currentQuestion, setCurrentQuestion] = useState<number>(0);
+  const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
@@ -173,7 +173,6 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
               </div>
             ))}
         </div>
-        <KeyBoard />
       </div>
       {/* مودال تأیید پایان */}
       <ConfirmModal

@@ -27,8 +27,7 @@ interface Props {
 
 const AddAnwersPage: FC<Props> = ({ testID }) => {
   const [test, setTest] = useState<Test>();
-  const [currentQuestion, setCurrentQuestion] = useState<number>(0);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
