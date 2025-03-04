@@ -16,13 +16,15 @@ const keys = [
     id: i++,
     title: "0",
     key: "0",
-    icon: <div className="w-6 h-6 rounded-full border-2 border-slate-950" />,
+    icon: (
+      <div className="w-6 h-6 rounded-full border-2 border-slate-950 hover:border-white" />
+    ),
   },
   {
     id: i++,
-    title: "back",
-    key: "Backspace",
-    icon: <XMarkIcon className="h-6 w-6" />,
+    title: "",
+    key: "ArrowRight",
+    icon: <ChevronRightIcon className="h-6 w-6" />,
   },
   {
     id: i++,
@@ -32,9 +34,9 @@ const keys = [
   },
   {
     id: i++,
-    title: "",
-    key: "ArrowRight",
-    icon: <ChevronRightIcon className="h-6 w-6" />,
+    title: "back",
+    key: "Backspace",
+    icon: <XMarkIcon className="h-6 w-6" />,
   },
 ];
 
@@ -58,21 +60,29 @@ const KeyBoard = ({ isVisible }: Props) => {
     window.dispatchEvent(event);
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
     if (typeof window === "undefined") return;
 
     setDragging(true);
-    const startX = e.clientX - position.x;
-    const startY = e.clientY - position.y;
+    const startX =
+      e instanceof MouseEvent
+        ? e.clientX - position.x
+        : (e as any).touches[0].clientX - position.x;
+    const startY =
+      e instanceof MouseEvent
+        ? e.clientY - position.y
+        : (e as any).touches[0].clientY - position.y;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      console.log(dragging, e);
-      // if (dragging) {
+    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+      const clientX =
+        e instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
+      const clientY =
+        e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
+
       setPosition({
-        x: e.clientX - startX,
-        y: e.clientY - startY,
+        x: clientX - startX,
+        y: clientY - startY,
       });
-      // }
     };
 
     const handleMouseUp = () => {
@@ -80,10 +90,14 @@ const KeyBoard = ({ isVisible }: Props) => {
       setDragging(false);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleMouseMove);
+      window.removeEventListener("touchend", handleMouseUp);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("touchmove", handleMouseMove);
+    window.addEventListener("touchend", handleMouseUp);
   };
 
   return (
@@ -97,6 +111,7 @@ const KeyBoard = ({ isVisible }: Props) => {
           display: isVisible ? "block" : "none",
         }}
         onMouseDown={handleMouseDown}
+        onTouchStart={handleMouseDown}
       >
         <button className="absolute glass bottom-full w-12 h-12 left-0 !rounded-br-none"></button>
         <div className="grid grid-cols-4 items-center justify-center gap-2 p-4 max-w-[30rem]">
