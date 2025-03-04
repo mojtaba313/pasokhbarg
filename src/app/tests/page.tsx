@@ -39,6 +39,7 @@ export default function Tests() {
     };
 
     const fetchTests = async () => {
+      console.log("session", session);
       const { data } = await axios.get("/api/tests");
       setTests(data);
       setIsLoading(false);
@@ -110,7 +111,10 @@ export default function Tests() {
             >
               <div className="absolute bottom-4 left-4 flex flex-col items-end">
                 <Link href={`/tests/${test._id}/add-answers`}>
-                <DocumentCheckIcon width={30} className="text-green-500 m-2 hover:text-green-600"/>
+                  <DocumentCheckIcon
+                    width={30}
+                    className="text-green-500 m-2 hover:text-green-600"
+                  />
                 </Link>
                 <label className="flex gap-2 cursor-pointer">
                   رویت شده :

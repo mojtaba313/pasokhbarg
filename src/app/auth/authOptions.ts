@@ -19,6 +19,7 @@ export const authOptions: NextAuthOptions = {
         console.log("Credentials:", credentials); // لاگ اطلاعات ورودی
 
         const user = await User.findOne({ username: credentials?.username });
+        console.log("user authOptions", user);
         if (!user) {
           console.log("User not found"); // لاگ عدم یافتن کاربر
           throw new Error("کاربر یافت نشد");
@@ -34,7 +35,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         console.log("User authorized:", user); // لاگ کاربر احراز هویت شده
-        return { id: user._id, _id: user._id, username: user.username, name: user.name };
+        return {
+          id: user._id,
+          _id: user._id,
+          username: user.username,
+          name: user.name,
+          roles: user.roles,
+        };
       },
     }),
   ],
@@ -43,9 +50,10 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.user = {
           id: user.id,
-          _id: user._id, // اضافه کردن فیلد _id
-          username: user.username,
+          _id: user._id,
           name: user.name,
+          username: user.username,
+          roles: user.roles, // اضافه کردن roles به توکن
         };
       }
       return token;
@@ -54,9 +62,10 @@ export const authOptions: NextAuthOptions = {
       if (token.user) {
         session.user = {
           id: token.user.id,
-          _id: token.user._id, // اضافه کردن فیلد _id
-          username: token.user.username,
+          _id: token.user._id,
           name: token.user.name,
+          username: token.user.username,
+          roles: token.user.roles, // اضافه کردن roles به session
         };
       }
       return session;
@@ -66,5 +75,5 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin", // مسیر صفحه ورود
     error: "/auth/signin", // مسیر صفحه خطا (اختیاری)
   },
-  secret: 'the-testsecretkey', // کلید رمزنگاری
+  secret: process.env.NEXTAUTH_SECRET, // کلید رمزنگاری
 };
