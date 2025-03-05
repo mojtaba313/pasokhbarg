@@ -1,4 +1,15 @@
 
+the codes of file with route : /app/403/page.tsx
+ :// app/403/page.tsx
+export default function AccessDenied() {
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <h1 className="text-2xl">403 - دسترسی ممنوع</h1>
+    </div>
+  );
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /app/Provider.tsx
  :// app/provider.tsx
 "use client"; // این خط را اضافه کنید
@@ -10,135 +21,449 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 }
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /app/admin/access/page.tsx
+ :// app/admin/access/page.tsx
+"use client";
+import { useState, useEffect } from "react";
+import PageAccess, { IPageAccess } from "@/models/PageAccess";
+import User, { IUser } from "@/models/User";
+import { useSession } from "next-auth/react";
+
+export default function AccessManagement() {
+  const { data: session } = useSession();
+  const [pages, setPages] = useState<IPageAccess[]>([]);
+  const [users, setUsers] = useState<IUser[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/access")
+      .then((res) => res.json())
+      .then((data) => setPages(data));
+
+    fetch("/api/admin/users")
+      .then((res) => res.json())
+      .then((data) => setUsers(data));
+  }, []);
+
+  const updatePageAccess = async (
+    pageId: string,
+    updates: Partial<IPageAccess>
+  ) => {
+    const res = await fetch(`/api/admin/access/${pageId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+    const updatedPage = await res.json();
+    setPages(pages.map((p) => (p._id === updatedPage._id ? updatedPage : p)));
+  };
+
+  if (!session?.user?.roles?.includes("admin")) {
+    console.log(session?.user)
+    return <div>دسترسی غیرمجاز</div>;
+  }
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl mb-4">مدیریت دسترسی صفحات</h1>
+
+      <table className="w-full border-collapse">
+        <thead>
+          <tr>
+            <th>مسیر صفحه</th>
+            <th>عمومی</th>
+            <th>کاربران مجاز</th>
+            <th>نقش‌های مجاز</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pages.map((page) => (
+            <tr key={page._id}>
+              <td>{page.pageRoute}</td>
+              <td>
+                <input
+                  type="checkbox"
+                  checked={page.isPublic}
+                  onChange={(e) =>
+                    updatePageAccess(page._id, { isPublic: e.target.checked })
+                  }
+                />
+              </td>
+              <td>
+                <select
+                  multiple
+                  value={page.allowedUsers.map((u) => u.toString())}
+                  onChange={(e) => {
+                    const selectedUsers = Array.from(
+                      e.target.selectedOptions,
+                      (opt) => opt.value
+                    );
+                    updatePageAccess(page._id, { allowedUsers: selectedUsers });
+                  }}
+                >
+                  {users.map((user) => (
+                    <option key={user._id} value={user._id}>
+                      {user.name} ({user.username})
+                    </option>
+                  ))}
+                </select>
+              </td>
+              <td>
+                <select
+                  multiple
+                  value={page.allowedRoles}
+                  onChange={(e) => {
+                    const selectedRoles = Array.from(
+                      e.target.selectedOptions,
+                      (opt) => opt.value
+                    );
+                    updatePageAccess(page._id, { allowedRoles: selectedRoles });
+                  }}
+                >
+                  <option value="admin">مدیر</option>
+                  <option value="user">کاربر عادی</option>
+                </select>
+              </td>
+              <td>
+                <button
+                  onClick={() =>
+                    updatePageAccess(page._id, { isPublic: !page.isPublic })
+                  }
+                  className="bg-blue-500 text-white px-2 py-1 rounded"
+                >
+                  ذخیره
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/admin/users/create/page.tsx
+ :"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function CreateUser() {
+  const [formData, setFormData] = useState({
+    name: "",
+    username: "",
+    password: "",
+    roles: ["user"],
+  });
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        router.push("/admin/users");
+      } else {
+        const data = await res.json();
+        setError(data.error || "خطا در ایجاد کاربر");
+      }
+    } catch (err) {
+      setError("خطا در ارتباط با سرور");
+    }
+  };
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl mb-4">ایجاد کاربر جدید</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="name">نام</label>
+            <input
+              type="text"
+              id="name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="username">نام کاربری</label>
+            <input
+              type="text"
+              id="username"
+              value={formData.username}
+              onChange={(e) =>
+                setFormData({ ...formData, username: e.target.value })
+              }
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password">رمز عبور</label>
+            <input
+              type="password"
+              id="password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="roles">نقش‌ها</label>
+            <select
+              id="roles"
+              multiple
+              value={formData.roles}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  roles: Array.from(e.target.selectedOptions, (opt) => opt.value),
+                })
+              }
+              className="w-full p-2 border rounded"
+            >
+              <option value="admin">مدیر</option>
+              <option value="user">کاربر عادی</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            ایجاد کاربر
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/admin/users/page.tsx
+ :"use client";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import User, { IUser } from "@/models/User";
+import Link from "next/link";
+
+export default function UserManagement() {
+  const { data: session } = useSession();
+  const [users, setUsers] = useState<IUser[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/users")
+      .then((res) => res.json())
+      .then((data) => setUsers(data));
+  }, []);
+
+  const deleteUser = async (userId: string) => {
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setUsers(users.filter((user) => user._id !== userId));
+    }
+  };
+
+  if (!session?.user?.roles?.includes("admin")) {
+    return <div>دسترسی غیرمجاز</div>;
+  }
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl mb-4">مدیریت کاربران</h1>
+      <Link href="/admin/users/create">
+        <button className="bg-blue-500 text-white px-4 py-2 rounded mb-4">
+          ایجاد کاربر جدید
+        </button>
+      </Link>
+      <table className="w-full border-collapse">
+        <thead>
+          <tr>
+            <th>نام</th>
+            <th>نام کاربری</th>
+            <th>نقش‌ها</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user._id}>
+              <td>{user.name}</td>
+              <td>{user.username}</td>
+              <td>{user.roles?.join(", ")}</td>
+              <td>
+                <button
+                  onClick={() => deleteUser(user._id)}
+                  className="bg-red-500 text-white px-2 py-1 rounded"
+                >
+                  حذف
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/api/admin/access/[id]/route.ts
+ :import { authOptions } from "@/app/auth/authOptions";
+import PageAccess from "@/models/PageAccess";
+import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const id = (await params).id;
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.roles?.includes("admin")) {
+    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+  }
+
+  const updates = await req.json();
+  const updatedPage = await PageAccess.findByIdAndUpdate(id, updates, {
+    new: true,
+  }).populate("allowedUsers");
+  return NextResponse.json(updatedPage);
+}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/api/admin/access/route.ts
+ :// app/api/admin/access/route.ts
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/auth/authOptions';
+import PageAccess from '@/models/PageAccess';
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.roles?.includes('admin')) {
+    return NextResponse.json({ error: 'دسترسی غیرمجاز' }, { status: 403 });
+  }
+
+  const pages = await PageAccess.find().populate('allowedUsers');
+  return NextResponse.json(pages);
+}
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/api/admin/users/route.ts
+ :import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/auth/authOptions";
+import User from "@/models/User";
+import connectDB from "@/lib/mongodb";
+
+await connectDB();
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.roles?.includes("admin")) {
+    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+  }
+
+  try {
+    const users = await User.find({}).select("-password");
+    return NextResponse.json(users);
+  } catch (error) {
+    console.error("خطا در دریافت کاربران:", error);
+    return NextResponse.json(
+      { error: "خطا در دریافت کاربران" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.roles?.includes("admin")) {
+    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+  }
+
+  try {
+    const { name, username, password, roles } = await req.json();
+
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "این نام کاربری قبلاً ثبت‌نام کرده است" },
+        { status: 400 }
+      );
+    }
+
+    const newUser = await User.create({
+      name,
+      username,
+      password,
+      roles: roles || ["user"],
+    });
+
+    const userWithoutPassword = newUser.toObject();
+    delete userWithoutPassword.password;
+
+    return NextResponse.json(userWithoutPassword, { status: 201 });
+  } catch (error) {
+    console.error("خطا در ایجاد کاربر:", error);
+    return NextResponse.json({ error: "خطا در ایجاد کاربر" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.roles?.includes("admin")) {
+    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+  }
+
+  try {
+    const { userId } = await req.json();
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json({ error: "کاربر یافت نشد" }, { status: 404 });
+    }
+
+    await User.findByIdAndDelete(userId);
+    return NextResponse.json(
+      { message: "کاربر با موفقیت حذف شد" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("خطا در حذف کاربر:", error);
+    return NextResponse.json({ error: "خطا در حذف کاربر" }, { status: 500 });
+  }
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /app/api/auth/[...nextauth]/route.ts
- :// // app/api/tests/route.ts
-// import { NextResponse } from "next/server";
-// import connectDB from "@/lib/mongodb";
-// import Test from "@/models/Test";
-// import { getServerSession } from "next-auth";
-// import { authOptions } from "@/app/auth/authOptions"; // import صحیح
-
-// export async function POST(req: Request) {
-//   try {
-//     const session = await getServerSession(authOptions); // استفاده از authOptions
-//     if (!session?.user) {
-//       return NextResponse.json(
-//         { message: "احراز هویت نامعتبر" },
-//         { status: 401 }
-//       );
-//     }
-
-//     await connectDB();
-//     const { title, startQuestion, endQuestion } = await req.json();
-
-//     // اعتبارسنجی داده‌ها
-//     if (!title || startQuestion < 1 || endQuestion <= startQuestion) {
-//       return NextResponse.json(
-//         { message: "داده‌های ورودی نامعتبر" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // ایجاد آرایه سوالات
-//     const questions = Array.from(
-//       { length: endQuestion - startQuestion + 1 },
-//       (_, i) => ({
-//         number: startQuestion + i,
-//         selectedOption: 0,
-//         timeSpent: 0,
-//       })
-//     );
-
-//     const test = await Test.create({
-//       title,
-//       startQuestion,
-//       endQuestion,
-//       questions,
-//       userId: session.user._id,
-//       viewed: false,
-//     });
-
-//     return NextResponse.json(test);
-//   } catch (error) {
-//     console.error("Error creating test:", error);
-//     return NextResponse.json(
-//       { message: "خطا در ایجاد آزمون" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
-// export const GET = async () => {
-//   try {
-//     const session = await getServerSession(authOptions);
-
-//     if (!session?.user) {
-//       return NextResponse.json(
-//         { message: "احراز هویت نامعتبر" },
-//         { status: 401 }
-//       );
-//     }
-
-//     const userId = session.user._id; 
-
-//     await connectDB();
-//     const result = await Test.find({ userId: session.user._id }).sort({
-//       createdAt: -1,
-//     });
-    
-//     return NextResponse.json(result);
-//   } catch (err) {
-//     console.error("Error fetching tests:", err);
-//     return NextResponse.json(
-//       { message: "خطا در دریافت آزمون‌ها" },
-//       { status: 500 }
-//     );
-//   }
-// };
-
-// export const PUT = async (req: Request) => {
-//   try {
-//     const session = await getServerSession(authOptions);
-//     if (!session?.user) {
-//       return NextResponse.json(
-//         { message: "احراز هویت نامعتبر" },
-//         { status: 401 }
-//       );
-//     }
-
-//     await connectDB();
-//     const { testId, updates } = await req.json();
-
-//     const existingTest = await Test.findOne({
-//       _id: testId,
-//       userId: session.user._id,
-//     });
-    
-//     if (!existingTest) {
-//       return NextResponse.json(
-//         { message: "آزمون یافت نشد" },
-//         { status: 404 }
-//       );
-//     }
-
-//     const updatedTest = await Test.findByIdAndUpdate(
-//       testId,
-//       updates,
-//       { new: true, runValidators: true }
-//     );
-
-//     return NextResponse.json(updatedTest);
-//   } catch (error) {
-//     console.error("Error updating test:", error);
-//     return NextResponse.json(
-//       { message: "خطا در به‌روزرسانی آزمون" },
-//       { status: 500 }
-//     );
-//   }
-// };
-
-// app/api/auth/[...nextauth]/route.ts
-import NextAuth from "next-auth";
+ :import NextAuth from "next-auth";
 import { authOptions } from "@/app/auth/authOptions";
 
 const handler = NextAuth(authOptions);
@@ -408,6 +733,7 @@ export const authOptions: NextAuthOptions = {
         console.log("Credentials:", credentials); // لاگ اطلاعات ورودی
 
         const user = await User.findOne({ username: credentials?.username });
+        console.log("user authOptions", user);
         if (!user) {
           console.log("User not found"); // لاگ عدم یافتن کاربر
           throw new Error("کاربر یافت نشد");
@@ -423,7 +749,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         console.log("User authorized:", user); // لاگ کاربر احراز هویت شده
-        return { id: user._id, _id: user._id, username: user.username, name: user.name };
+        return {
+          id: user._id,
+          _id: user._id,
+          username: user.username,
+          name: user.name,
+          roles: user.roles,
+        };
       },
     }),
   ],
@@ -432,9 +764,10 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.user = {
           id: user.id,
-          _id: user._id, // اضافه کردن فیلد _id
-          username: user.username,
+          _id: user._id,
           name: user.name,
+          username: user.username,
+          roles: user.roles, // اضافه کردن roles به توکن
         };
       }
       return token;
@@ -443,9 +776,10 @@ export const authOptions: NextAuthOptions = {
       if (token.user) {
         session.user = {
           id: token.user.id,
-          _id: token.user._id, // اضافه کردن فیلد _id
-          username: token.user.username,
+          _id: token.user._id,
           name: token.user.name,
+          username: token.user.username,
+          roles: token.user.roles, // اضافه کردن roles به session
         };
       }
       return session;
@@ -455,8 +789,9 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin", // مسیر صفحه ورود
     error: "/auth/signin", // مسیر صفحه خطا (اختیاری)
   },
-  secret: 'the-testsecretkey', // کلید رمزنگاری
+  secret: process.env.NEXTAUTH_SECRET, // کلید رمزنگاری
 };
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/auth/signin/page.tsx
@@ -869,6 +1204,7 @@ export default function Tests() {
     };
 
     const fetchTests = async () => {
+      console.log("session", session);
       const { data } = await axios.get("/api/tests");
       setTests(data);
       setIsLoading(false);
@@ -940,7 +1276,10 @@ export default function Tests() {
             >
               <div className="absolute bottom-4 left-4 flex flex-col items-end">
                 <Link href={`/tests/${test._id}/add-answers`}>
-                <DocumentCheckIcon width={30} className="text-green-500 m-2 hover:text-green-600"/>
+                  <DocumentCheckIcon
+                    width={30}
+                    className="text-green-500 m-2 hover:text-green-600"
+                  />
                 </Link>
                 <label className="flex gap-2 cursor-pointer">
                   رویت شده :
@@ -1327,13 +1666,15 @@ const keys = [
     id: i++,
     title: "0",
     key: "0",
-    icon: <div className="w-6 h-6 rounded-full border-2 border-slate-950" />,
+    icon: (
+      <div className="w-6 h-6 rounded-full border-2 border-slate-950 hover:border-white" />
+    ),
   },
   {
     id: i++,
-    title: "back",
-    key: "Backspace",
-    icon: <XMarkIcon className="h-6 w-6" />,
+    title: "",
+    key: "ArrowRight",
+    icon: <ChevronRightIcon className="h-6 w-6" />,
   },
   {
     id: i++,
@@ -1343,9 +1684,9 @@ const keys = [
   },
   {
     id: i++,
-    title: "",
-    key: "ArrowRight",
-    icon: <ChevronRightIcon className="h-6 w-6" />,
+    title: "back",
+    key: "Backspace",
+    icon: <XMarkIcon className="h-6 w-6" />,
   },
 ];
 
@@ -1369,21 +1710,29 @@ const KeyBoard = ({ isVisible }: Props) => {
     window.dispatchEvent(event);
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
     if (typeof window === "undefined") return;
 
     setDragging(true);
-    const startX = e.clientX - position.x;
-    const startY = e.clientY - position.y;
+    const startX =
+      e instanceof MouseEvent
+        ? e.clientX - position.x
+        : (e as any).touches[0].clientX - position.x;
+    const startY =
+      e instanceof MouseEvent
+        ? e.clientY - position.y
+        : (e as any).touches[0].clientY - position.y;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      console.log(dragging, e);
-      // if (dragging) {
+    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+      const clientX =
+        e instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
+      const clientY =
+        e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
+
       setPosition({
-        x: e.clientX - startX,
-        y: e.clientY - startY,
+        x: clientX - startX,
+        y: clientY - startY,
       });
-      // }
     };
 
     const handleMouseUp = () => {
@@ -1391,10 +1740,14 @@ const KeyBoard = ({ isVisible }: Props) => {
       setDragging(false);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleMouseMove);
+      window.removeEventListener("touchend", handleMouseUp);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("touchmove", handleMouseMove);
+    window.addEventListener("touchend", handleMouseUp);
   };
 
   return (
@@ -1408,6 +1761,7 @@ const KeyBoard = ({ isVisible }: Props) => {
           display: isVisible ? "block" : "none",
         }}
         onMouseDown={handleMouseDown}
+        onTouchStart={handleMouseDown}
       >
         <button className="absolute glass bottom-full w-12 h-12 left-0 !rounded-br-none"></button>
         <div className="grid grid-cols-4 items-center justify-center gap-2 p-4 max-w-[30rem]">
@@ -2643,6 +2997,43 @@ export const connectDB = async() => {
 export default connectDB
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /middleware/auth.ts
+ :import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { NextApiRequest } from "next";
+
+export async function middleware(req: NextApiRequest) {
+  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+  if (!session?.user?.roles?.includes("admin")) {
+    return NextResponse.redirect(new URL("/403", req.url));
+  }
+
+  return NextResponse.next();
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /models/PageAccess.ts
+ :import mongoose, { Schema, Document } from 'mongoose';
+
+export interface IPageAccess extends Document {
+  _id: string;
+  pageRoute: string;
+  isPublic: boolean;
+  allowedUsers: string[];
+  allowedRoles: string[];
+}
+
+const PageAccessSchema = new Schema<IPageAccess>({
+  pageRoute: { type: String, required: true, unique: true },
+  isPublic: { type: Boolean, default: false },
+  allowedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  allowedRoles: [{ type: String }],
+});
+
+export default mongoose.models.PageAccess || mongoose.model<IPageAccess>('PageAccess', PageAccessSchema);
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /models/Test.ts
  :// models/Test.ts
 import mongoose, { Document, Schema } from "mongoose";
@@ -2704,79 +3095,56 @@ export default mongoose.models.Test ||
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /models/User.ts
- :// models/User.ts
-import mongoose, { Document, Schema } from "mongoose";
-import bcrypt from "bcrypt";
+ :import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IUser extends Document {
+  _id: string;
   name: string;
   username: string;
   password: string;
+  roles: string[];
+  permissions: string[];
   createdAt: Date;
   updatedAt: Date;
-  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-// models/User.ts
 const UserSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
-    username: { type: String, required: true, unique: true }, // تغییر این خط
+    username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    roles: { type: [String], default: ['user'] },
+    permissions: { type: [String], default: [] },
   },
   { timestamps: true }
 );
 
-// Hash password قبل از ذخیره کاربر
-// UserSchema.pre<IUser>("save", async function (next) {
-//   if (!this.isModified("password")) return next();
-
-//   try {
-//     const salt = await bcrypt.genSalt(10);
-//     this.password = await bcrypt.hash(this.password, salt);
-//     next();
-//   } catch (error) {
-//     next(error as Error);
-//   }
-// });
-
-UserSchema.pre<IUser>("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-// متد برای مقایسه پسورد
-UserSchema.methods.comparePassword = async function (
-  candidatePassword: string
-): Promise<boolean> {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
-
-export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /types/next-auth.d.ts.ts
- :// next-auth.d.ts
-import "next-auth/jwt";
+ :// types/next-auth.d.ts
 import "next-auth";
+import "next-auth/jwt";
 
 declare module "next-auth" {
   interface User {
     id: string;
-    _id: string; // اضافه کردن فیلد _id
+    _id: string;
     name?: string | null;
     username?: string | null;
+    roles?: string[]; // اضافه کردن فیلد roles
+    permissions?: string[]; // اضافه کردن فیلد permissions
   }
 
   interface Session {
     user?: {
       id: string;
-      _id: string; // اضافه کردن فیلد _id
+      _id: string;
       name?: string | null;
       username?: string | null;
+      roles?: string[]; // اضافه کردن فیلد roles
+      permissions?: string[]; // اضافه کردن فیلد permissions
     };
   }
 }
@@ -2785,9 +3153,11 @@ declare module "next-auth/jwt" {
   interface JWT {
     user?: {
       id: string;
-      _id: string; // اضافه کردن فیلد _id
+      _id: string;
       name?: string | null;
       username?: string | null;
+      roles?: string[]; // اضافه کردن فیلد roles
+      permissions?: string[]; // اضافه کردن فیلد permissions
     };
   }
 }

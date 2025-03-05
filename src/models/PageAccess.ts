@@ -1,13 +1,11 @@
-// models/PageAccess.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IPageAccess extends Document {
-  _id:string;
-  pageRoute: string; // مسیر صفحه (مثلاً /tests یا /admin)
-  isPublic: boolean; // آیا صفحه عمومی است؟
-  allowedUsers: string[]; 
-  // allowedUsers: mongoose.Types.ObjectId[]; 
-  allowedRoles: string[]; // لیست نقش‌های مجاز (مثلاً admin, user)
+  _id: string;
+  pageRoute: string;
+  isPublic: boolean;
+  allowedUsers: string[];
+  allowedRoles: string[];
 }
 
 const PageAccessSchema = new Schema<IPageAccess>({

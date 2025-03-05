@@ -48,25 +48,22 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        const dbUser = await User.findById(user.id)
+          .select(
+            "roles permissions supervisors assistantOf assistantPermissions students"
+          )
+          .populate("supervisors assistantOf students");
+
         token.user = {
-          id: user.id,
-          _id: user._id,
-          name: user.name,
-          username: user.username,
-          roles: user.roles, // اضافه کردن roles به توکن
+          ...user,
+          ...dbUser?.toObject(),
         };
       }
       return token;
     },
     async session({ session, token }) {
       if (token.user) {
-        session.user = {
-          id: token.user.id,
-          _id: token.user._id,
-          name: token.user.name,
-          username: token.user.username,
-          roles: token.user.roles, // اضافه کردن roles به session
-        };
+        session.user = token.user as any;
       }
       return session;
     },
