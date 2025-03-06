@@ -17,8 +17,6 @@ export async function POST(req: Request) {
   }
 
   const { action, adminId, userId, permissions, userIds } = await req.json();
-
-  console.log('adminId',adminId)
   
   try {
     const admin = await User.findById(adminId);
