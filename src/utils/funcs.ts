@@ -22,3 +22,6 @@ export const countAnswers = (questions: Question[]) => {
 
   return { correct, incorrect, unanswered };
 };
+
+export const formatDate = (date: Date) =>
+  new Date(date).toLocaleDateString("fa-IR");

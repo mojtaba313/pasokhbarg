@@ -90,12 +90,12 @@ const SingleExamPage: FC<Props> = ({  examID }) => {
 
   return (
     <div
-      className="min-h-screen w-screen h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+      className="min-h-screen w-screen h-screen overflow-hidden transition-colors duration-300"
       dir="ltr"
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="hidden xs:flex items-center justify-between p-8 h-20 bg-white dark:bg-gray-800 shadow-sm">
+        <div className="glass-panel bg-white/20 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
           <button
             onClick={() => router.push("/exams")}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
@@ -136,13 +136,13 @@ const SingleExamPage: FC<Props> = ({  examID }) => {
         </div>
 
         {/* Questions Container */}
-        <div className="flex pb-32 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
+        <div className="flex pb-32 pl-5 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
           {Array(Math.ceil(exam.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => (
               <div
                 key={`${i}-`}
-                className="border dark:border-slate-700 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-w-[300px]"
+                className="glass-effect border rounded-lg dark:border-slate-700 shadow-lg hover:shadow-xl transition-shadow duration-300 min-w-[300px]"
               >
                 {/* Card Header */}
                 <div className="flex justify-between p-4 border-b dark:border-gray-700 pr-8">

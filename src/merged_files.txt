@@ -1,7 +1,6 @@
 
 the codes of file with route : /app/403/page.tsx
- :// app/403/page.tsx
-export default function AccessDenied() {
+ :export default function AccessDenied() {
   return (
     <div className="flex items-center justify-center h-screen">
       <h1 className="text-2xl">403 - دسترسی ممنوع</h1>
@@ -11,19 +10,23 @@ export default function AccessDenied() {
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/Provider.tsx
- :// app/provider.tsx
-"use client"; // این خط را اضافه کنید
+ :"use client";
 
 import { SessionProvider } from "next-auth/react";
+import { PrimeReactProvider } from "primereact/api";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <PrimeReactProvider>{children}</PrimeReactProvider>
+    </SessionProvider>
+  );
 }
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/admin/access/page.tsx
- :// app/admin/access/page.tsx
-"use client";
+ :"use client";
 import { useState, useEffect } from "react";
 import PageAccess, { IPageAccess } from "@/models/PageAccess";
 import User, { IUser } from "@/models/User";
@@ -58,7 +61,6 @@ export default function AccessManagement() {
   };
 
   if (!session?.user?.roles?.includes("admin")) {
-    console.log(session?.user)
     return <div>دسترسی غیرمجاز</div>;
   }
 
@@ -144,9 +146,305 @@ export default function AccessManagement() {
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /app/admin/dashboard/page.tsx
+ :"use client";
+import StatisticsCards from "@/components/admin/StatisticsCards";
+
+export default function DashboardPage() {
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">داشبورد مدیریت</h1>
+      <StatisticsCards />
+    </div>
+  );
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/admin/page.tsx
+ :const AdminPage = ()=>{
+  return <></>
+}
+
+export default AdminPage;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/admin/settings/permissions/page.tsx
+ :'use client'
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import PermissionMatrix, { ActionT } from '@/components/admin/PermissionMatrix';
+
+const PermissionSettingsPage = () => {
+  const [modules, setModules] = useState([
+    { id: 'users', name: 'کاربران', read: true, create: false, update: false, delete: false },
+  ]);
+
+  const handlePermissionChange = (moduleId:string, action:string, value:boolean) => {
+    setModules(prev => prev.map(m => 
+      m.id === moduleId ? { ...m, [action]: value } : m
+    ));
+  };
+
+  return (
+    <div className="p-6 bg-white rounded-xl shadow-lg">
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+      >
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">
+          تنظیمات دسترسی‌ها
+        </h1>
+        
+        <div className="space-y-4">
+          {/* <Alert severity="info" className="mb-4">
+            دسترسی‌های تعیین شده در این بخش به صورت سراسری اعمال خواهند شد
+          </Alert> */}
+          
+          <PermissionMatrix 
+            permissions={modules}
+            onUpdate={handlePermissionChange}
+          />
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default PermissionSettingsPage;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/admin/users/[userID]/page.tsx
+ :'use client'
+import { useMemo, useState } from "react";
+import {
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { motion } from "framer-motion";
+import { ShieldCheckIcon, PlusIcon } from "@heroicons/react/24/outline";
+import PaginationControls from "@/components/PaginationControls";
+
+const Badge = ({
+  count,
+  color,
+  className,
+}: {
+  count: number;
+  color: string;
+  className?: string;
+}) => (
+  <span
+    className={`bg-${color}-100 text-${color}-800 text-xs font-semibold px-2.5 py-0.5 rounded ${className}`}
+  >
+    {count}
+  </span>
+);
+
+const RoleFilter = ({
+  currentRole,
+  onChange,
+}: {
+  currentRole: string;
+  onChange: (role: string) => void;
+}) => (
+  <select
+    value={currentRole}
+    onChange={(e) => onChange(e.target.value)}
+    className="border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+  >
+    <option value="all">همه نقش‌ها</option>
+    <option value="admin">ادمین</option>
+    <option value="user">کاربر</option>
+  </select>
+);
+
+const SearchInput = ({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) => (
+  <input
+    type="text"
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    placeholder={placeholder}
+    className="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-full max-w-md"
+  />
+);
+
+const ActionButton = ({
+  icon,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+  >
+    {icon}
+  </button>
+);
+
+type User = {
+  id: string;
+  name: string;
+  username: string;
+  roles: string[];
+};
+
+const UsersPage = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [currentRole, setCurrentRole] = useState("all");
+
+  const columns = useMemo(
+    () => [
+      {
+        header: "اطلاعات کاربر",
+        columns: [
+          { accessorKey: "name", header: "نام کامل" },
+          { accessorKey: "username", header: "نام کاربری" },
+          {
+            accessorKey: "roles",
+            header: "نقش‌ها",
+            cell: ({ getValue }: { getValue: () => string[] }) =>
+              getValue().join(", "),
+          },
+        ],
+      },
+      {
+        header: "مدیریت",
+        columns: [
+          {
+            id: "actions",
+            cell: ({ row }: { row: { original: User } }) => (
+              <div className="flex gap-2">
+                <ActionButton
+                  icon={<ShieldCheckIcon className="w-5 h-5" />}
+                  onClick={() => openRoleModal(row.original)}
+                />
+                <ActionButton
+                  icon={<PlusIcon className="w-5 h-5" />}
+                  onClick={() => openHierarchyModal(row.original)}
+                />
+              </div>
+            ),
+          },
+        ],
+      },
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data: users,
+    columns,
+    state: { globalFilter },
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  const openRoleModal = (user: User) => {
+    console.log("Open role modal for:", user);
+  };
+
+  const openHierarchyModal = (user: User) => {
+    console.log("Open hierarchy modal for:", user);
+  };
+
+  return (
+    <div className="p-6 bg-white rounded-xl shadow-lg">
+      <div className="flex justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">
+          مدیریت کاربران
+          <Badge count={users.length} color="blue" className="mr-2" />
+        </h1>
+
+        <RoleFilter currentRole={currentRole} onChange={setCurrentRole} />
+      </div>
+
+      <div className="mb-4">
+        <SearchInput
+          value={globalFilter}
+          onChange={setGlobalFilter}
+          placeholder="جستجو در کاربران..."
+        />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="border rounded-lg overflow-hidden"
+      >
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+
+          <tbody className="divide-y divide-gray-200">
+            {table.getRowModel().rows.map((row) => (
+              <motion.tr
+                key={row.id}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
+      </motion.div>
+
+      <PaginationControls
+        currentPage={table.getState().pagination.pageIndex + 1}
+        totalPages={table.getPageCount()}
+        onPrev={table.previousPage}
+        onNext={table.nextPage}
+      />
+    </div>
+  );
+};
+
+export default UsersPage;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /app/admin/users/create/page.tsx
  :"use client";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CreateUser() {
@@ -159,7 +457,7 @@ export default function CreateUser() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e:FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -188,46 +486,40 @@ export default function CreateUser() {
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div>
-            <label htmlFor="name">نام</label>
+            <label htmlFor="name" className="block">نام</label>
             <input
               type="text"
               id="name"
               value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full p-2 border rounded"
               required
             />
           </div>
           <div>
-            <label htmlFor="username">نام کاربری</label>
+            <label htmlFor="username" className="block">نام کاربری</label>
             <input
               type="text"
               id="username"
               value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               className="w-full p-2 border rounded"
               required
             />
           </div>
           <div>
-            <label htmlFor="password">رمز عبور</label>
+            <label htmlFor="password" className="block">رمز عبور</label>
             <input
               type="password"
               id="password"
               value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="w-full p-2 border rounded"
               required
             />
           </div>
           <div>
-            <label htmlFor="roles">نقش‌ها</label>
+            <label htmlFor="roles" className="block">نقش‌ها</label>
             <select
               id="roles"
               multiple
@@ -255,69 +547,53 @@ export default function CreateUser() {
     </div>
   );
 }
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/admin/users/page.tsx
  :"use client";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import User, { IUser } from "@/models/User";
-import Link from "next/link";
+import { IUser } from "@/models/User";
 
 export default function UserManagement() {
   const { data: session } = useSession();
   const [users, setUsers] = useState<IUser[]>([]);
 
   useEffect(() => {
-    fetch("/api/admin/users")
-      .then((res) => res.json())
-      .then((data) => setUsers(data));
-  }, []);
+    const fetchUsers = async () => {
+      const res = await fetch("/api/admin/users");
+      const data = await res.json();
+      setUsers(data);
+    };
 
-  const deleteUser = async (userId: string) => {
-    const res = await fetch(`/api/admin/users/${userId}`, {
-      method: "DELETE",
-    });
-    if (res.ok) {
-      setUsers(users.filter((user) => user._id !== userId));
-    }
-  };
-
-  if (!session?.user?.roles?.includes("admin")) {
-    return <div>دسترسی غیرمجاز</div>;
-  }
+    fetchUsers();
+  }, [session]);
 
   return (
     <div className="p-8">
       <h1 className="text-2xl mb-4">مدیریت کاربران</h1>
-      <Link href="/admin/users/create">
-        <button className="bg-blue-500 text-white px-4 py-2 rounded mb-4">
-          ایجاد کاربر جدید
-        </button>
-      </Link>
+
       <table className="w-full border-collapse">
         <thead>
           <tr>
             <th>نام</th>
-            <th>نام کاربری</th>
-            <th>نقش‌ها</th>
-            <th>عملیات</th>
+            <th>نقش</th>
+            <th>دستیار</th>
+            <th>دسترسی‌ها</th>
           </tr>
         </thead>
         <tbody>
           {users.map((user) => (
             <tr key={user._id}>
               <td>{user.name}</td>
-              <td>{user.username}</td>
-              <td>{user.roles?.join(", ")}</td>
+              <td>{user.roles.join(", ")}</td>
               <td>
-                <button
-                  onClick={() => deleteUser(user._id)}
-                  className="bg-red-500 text-white px-2 py-1 rounded"
-                >
-                  حذف
-                </button>
+                {user.managedBy
+                  ? (user.managedBy as unknown as IUser).name
+                  : "-"}
               </td>
+              <td>{user.permissions?.join(", ")}</td>
             </tr>
           ))}
         </tbody>
@@ -353,22 +629,163 @@ export async function PUT(
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/api/admin/access/route.ts
- :// app/api/admin/access/route.ts
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/auth/authOptions';
-import PageAccess from '@/models/PageAccess';
+ :import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/auth/authOptions";
+import PageAccess from "@/models/PageAccess";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.roles?.includes('admin')) {
-    return NextResponse.json({ error: 'دسترسی غیرمجاز' }, { status: 403 });
+  if (!session?.user?.roles?.includes("admin")) {
+    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
   }
 
-  const pages = await PageAccess.find().populate('allowedUsers');
+  const pages = await PageAccess.find().populate("allowedUsers");
   return NextResponse.json(pages);
 }
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/api/admin/hierarchy/route.ts
+ :import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/auth/authOptions";
+import User from "@/models/User";
+import connectDB from "@/lib/mongodb";
+import mongoose from "mongoose";
+
+export async function POST(req: Request) {
+  await connectDB();
+  const session = await getServerSession(authOptions);
+
+  if (
+    !session?.user?.roles?.includes("master") &&
+    !session?.user?.roles?.includes("admin")
+  ) {
+    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+  }
+
+  const { action, adminId, userId, permissions, userIds } = await req.json();
+  
+  try {
+    const admin = await User.findById(adminId);
+    if (!admin) {
+      return NextResponse.json({ error: "ادمین یافت نشد" }, { status: 404 });
+    }
+
+    switch (action) {
+      case "add-assistant": {
+        // if (admin.roles[0] !== "admin") {
+        //   return NextResponse.json(
+        //     { error: "فقط ادمین ها می توانند دستیار اضافه کنند" },
+        //     { status: 400 }
+        //   );
+        // }
+
+        // const invalidPerms = permissions.filter(
+        //   (p: string) => !admin.permissions.includes(p)
+        // );
+
+        // if (invalidPerms.length > 0) {
+        //   return NextResponse.json(
+        //     {
+        //       error: `دسترسی های غیرمجاز: ${invalidPerms.join(", ")}`,
+        //     },
+        //     { status: 400 }
+        //   );
+        // }
+
+        // const user = await User.findById(userId);
+        // if (!user) {
+        //   return NextResponse.json(
+        //     { error: "کاربر یافت نشد" },
+        //     { status: 404 }
+        //   );
+        // }
+
+        // user.roles = ["assistant"];
+        // if (!user.managedBy.includes(adminId)) {
+        //   user.managedBy.push(adminId);
+        // }
+        // user.maxPermissions = permissions;
+        // admin.managedUsers.push(userId);
+
+        // await user.save();
+        // await admin.save();
+        // break;
+      }
+
+      case "add-sub-users": {
+        if (!userIds || !Array.isArray(userIds)) {
+          return NextResponse.json(
+            { error: "لیست کاربران نامعتبر است" },
+            { status: 400 }
+          );
+        }
+
+        const users = await User.find({ _id: { $in: userIds } });
+        if (users.length !== userIds.length) {
+          return NextResponse.json(
+            { error: "برخی از کاربران یافت نشدند" },
+            { status: 404 }
+          );
+        }
+
+        for (const user of users) {
+          if (!user.managedBy.includes(adminId)) {
+            user.managedBy.push(adminId);
+            await user.save();
+          }
+        }
+
+        admin.managedUsers.push(...userIds);
+        await admin.save();
+        break;
+      }
+
+      case "remove-from-subset": {
+        const admin = await User.findById(adminId);
+        const user = await User.findById(userId);
+
+        if (!admin || !user) {
+          return NextResponse.json(
+            { error: "کاربر یا ادمین یافت نشد" },
+            { status: 404 }
+          );
+        }
+
+        user.managedBy = user.managedBy.filter(
+          (id: mongoose.Types.ObjectId) => id.toString() !== adminId
+        );
+        await user.save();
+
+        admin.managedUsers = admin.managedUsers.filter(
+          (id: mongoose.Types.ObjectId) => id.toString() !== userId
+        );
+        await admin.save();
+
+        return NextResponse.json({
+          message: "کاربر با موفقیت از زیرمجموعه حذف شد",
+          success: true,
+        });
+      }
+
+
+
+      default: {
+        return NextResponse.json(
+          { error: "عملیات نامعتبر است" },
+          { status: 400 }
+        );
+      }
+    }
+
+    return NextResponse.json({ message: "عملیات موفقیت‌آمیز", success: true });
+  } catch (error) {
+    console.error("خطا در مدیریت سلسله مراتب:", error);
+    return NextResponse.json({ error: "خطای سرور" }, { status: 500 });
+  }
+}
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -384,12 +801,17 @@ await connectDB();
 export async function GET() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.roles?.includes("admin")) {
+  if (
+    !(
+      session?.user?.roles?.includes("admin") ||
+      session?.user?.roles?.includes("master")
+    )
+  ) {
     return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
   }
 
   try {
-    const users = await User.find({}).select("-password");
+    const users:any = await User.find({}).select("-password");
     return NextResponse.json(users);
   } catch (error) {
     console.error("خطا در دریافت کاربران:", error);
@@ -460,6 +882,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "خطا در حذف کاربر" }, { status: 500 });
   }
 }
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/api/auth/[...nextauth]/route.ts
@@ -472,18 +895,15 @@ export { handler as GET, handler as POST };
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/api/auth/signup/route.ts
- :// app/api/auth/signup/route.ts
-import { NextResponse } from "next/server";
+ :import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 
-// app/api/auth/signup/route.ts
 export async function POST(req: Request) {
   try {
     await connectDB();
     const { name, username, password } = await req.json();
 
-    // اعتبارسنجی داده‌ها
     if (!username || !password || !name) {
       return NextResponse.json(
         { message: "تمامی فیلدها الزامی هستند" },
@@ -491,7 +911,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // بررسی وجود کاربر با همین نام کاربری
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return NextResponse.json(
@@ -500,10 +919,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // ایجاد کاربر جدید
     const user = await User.create({ 
       name, 
-      username: username.toLowerCase(), // تبدیل به حروف کوچک
+      username: username.toLowerCase(),
       password 
     });
 
@@ -519,7 +937,6 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Error in signup:", error);
     
-    // هندل کردن خطاهای MongoDB
     if (error.code === 11000) {
       return NextResponse.json(
         { message: "این نام کاربری قبلاً ثبت‌نام کرده است" },
@@ -535,9 +952,8 @@ export async function POST(req: Request) {
 }
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-the codes of file with route : /app/api/test-connection/route.ts
- :// app/api/test-connection/route.ts
-import { NextResponse } from "next/server";
+the codes of file with route : /app/api/exam-connection/route.ts
+ :import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 
 export async function GET() {
@@ -554,9 +970,9 @@ export async function GET() {
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-the codes of file with route : /app/api/tests/[id]/route.ts
+the codes of file with route : /app/api/exams/[id]/route.ts
  :import connectDB from "@/lib/mongodb";
-import Test from "@/models/Test";
+import Exam from "@/models/Exam";
 import { NextResponse } from "next/server";
 
 export const GET = async (
@@ -572,10 +988,9 @@ export const GET = async (
     if (!id) throw new Error();
 
     await connectDB();
-    const result = await Test.findById(id);
+    const result = await Exam.findById(id);
     return NextResponse.json(result);
   } catch (err) {
-    console.log("error--->", err);
     return NextResponse.json({ message: "has an error ==>", err });
   }
 };
@@ -591,7 +1006,7 @@ export const PUT = async (
     const updates = await req.json();
     const options = { new: true, runValidators: true };
 
-    const user = await Test.findByIdAndUpdate(id, updates, options);
+    const user = await Exam.findByIdAndUpdate(id, updates, options);
 
     if (!user) {
       return new Response(JSON.stringify({ message: "User not found" }), {
@@ -614,11 +1029,11 @@ export async function DELETE(
   try {
     const id = (await params).id;
     await connectDB();
-    await Test.findByIdAndDelete(id);
+    await Exam.findByIdAndDelete(id);
     return NextResponse.json({ success: true, status: 203 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to delete test" },
+      { error: "Failed to delete exam" },
       { status: 500 }
     );
   }
@@ -626,11 +1041,10 @@ export async function DELETE(
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-the codes of file with route : /app/api/tests/route.ts
- :// app/api/tests/route.ts
-import { NextResponse } from "next/server";
+the codes of file with route : /app/api/exams/route.ts
+ :import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import Test from "@/models/Test";
+import Exam from "@/models/Exam";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/auth/authOptions";
 
@@ -664,7 +1078,7 @@ export async function POST(req: Request) {
       })
     );
 
-    const test = await Test.create({
+    const exam = await Exam.create({
       title,
       startQuestion,
       endQuestion,
@@ -673,9 +1087,9 @@ export async function POST(req: Request) {
       viewed: false,
     });
 
-    return NextResponse.json(test);
+    return NextResponse.json(exam);
   } catch (error) {
-    console.error("Error creating test:", error);
+    console.error("Error creating exam:", error);
     return NextResponse.json(
       { message: "خطا در ایجاد آزمون" },
       { status: 500 }
@@ -695,13 +1109,13 @@ export const GET = async () => {
     }
 
     await connectDB();
-    const result = await Test.find({ userId: session.user._id }).sort({
+    const result = await Exam.find({ userId: session.user._id }).sort({
       createdAt: -1,
     });
 
     return NextResponse.json(result);
   } catch (err) {
-    console.error("Error fetching tests:", err);
+    console.error("Error fetching exams:", err);
     return NextResponse.json(
       { message: "خطا در دریافت آزمون‌ها" },
       { status: 500 }
@@ -711,9 +1125,104 @@ export const GET = async () => {
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /app/api/master/admins/route.ts
+ :import { authOptions } from "@/app/auth/authOptions";
+import connectDB from "@/lib/mongodb";
+import User from "@/models/User";
+import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
+import mongoose from "mongoose";
+
+export async function GET() {
+  await connectDB();
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.roles?.includes("master")) {
+    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+  }
+
+  try {
+    const admins = await User.find({ roles: { $in: ["admin"] } }).select(
+      "-password"
+    );
+    const users = await User.find({
+      roles: { $nin: ["admin", "master"] },
+    }).select("-password");
+    return NextResponse.json({ admins, users });
+  } catch (error) {
+    console.error("خطا در دریافت مدیران:", error);
+    return NextResponse.json(
+      { error: "خطا در دریافت مدیران" },
+      { status: 500 }
+    );
+  }
+}
+
+export const POST = async (req: Request) => {
+  await connectDB();
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.roles?.includes("master")) {
+    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+  }
+
+  const { action, adminId, userIds } = await req.json();
+
+  try {
+    switch (action) {
+      case "add-admin": {
+        if (!userIds || !Array.isArray(userIds)) {
+          return NextResponse.json(
+            { error: "لیست کاربران نامعتبر است" },
+            { status: 400 }
+          );
+        }
+
+        for (const userId of userIds) {
+          await User.updateOne({ _id: userId }, { $push: { roles: "admin" } });
+        }
+
+        break;
+      }
+
+      case "remove-admin": {
+        await User.updateOne({ _id: adminId }, { $pull: { roles: "admin" } });
+
+        const usersManagedByAdmin = await User.find({ managedBy: adminId });
+
+        for (const user of usersManagedByAdmin) {
+          user.managedBy = user.managedBy.filter(
+            (id: mongoose.Types.ObjectId) => id.toString() !== adminId
+          );
+          await user.save();
+        }
+
+        return NextResponse.json({
+          message:
+            "کاربر با موفقیت از حالت ادمین خارج شد و زیرمجموعه‌هایش نیز به‌روزرسانی شدند",
+          success: true,
+        });
+      }
+
+      default: {
+        return NextResponse.json(
+          { error: "عملیات نامعتبر است" },
+          { status: 400 }
+        );
+      }
+    }
+
+    return NextResponse.json({ message: "عملیات موفقیت‌آمیز", success: true });
+  } catch (error) {
+    console.error("خطا در مدیریت سلسله مراتب:", error);
+    return NextResponse.json({ error: "خطای سرور" }, { status: 500 });
+  }
+};
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /app/auth/authOptions.ts
- :// app/auth/authOptions.ts
-import { NextAuthOptions } from "next-auth";
+ :import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
@@ -730,31 +1239,33 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         await connectDB();
 
-        console.log("Credentials:", credentials); // لاگ اطلاعات ورودی
+        if (!credentials?.username || !credentials?.password) {
+          throw new Error("لطفاً نام کاربری و رمز عبور را وارد کنید");
+        }
 
-        const user = await User.findOne({ username: credentials?.username });
-        console.log("user authOptions", user);
+        const user = await User.findOne({ username: credentials.username });
         if (!user) {
-          console.log("User not found"); // لاگ عدم یافتن کاربر
           throw new Error("کاربر یافت نشد");
         }
 
         const isValid = await bcrypt.compare(
-          credentials?.password || "",
+          credentials.password,
           user.password
         );
         if (!isValid) {
-          console.log("Invalid password"); // لاگ رمز عبور نامعتبر
-          throw new Error("رمز عبور نامعتبر");
+          throw new Error("رمز عبور نامعتبر است");
         }
 
-        console.log("User authorized:", user); // لاگ کاربر احراز هویت شده
         return {
-          id: user._id,
-          _id: user._id,
+          id: user._id.toString(),
+          _id: user._id.toString(),
           username: user.username,
           name: user.name,
           roles: user.roles,
+          permissions: user.permissions,
+          managedUsers: user.managedUsers?.map((u: any) => u.toString()),
+          managedBy: user.managedBy?.toString(),
+          maxPermissions: user.maxPermissions,
         };
       },
     }),
@@ -762,41 +1273,28 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.user = {
-          id: user.id,
-          _id: user._id,
-          name: user.name,
-          username: user.username,
-          roles: user.roles, // اضافه کردن roles به توکن
-        };
+        token.user = user;
       }
       return token;
     },
     async session({ session, token }) {
       if (token.user) {
-        session.user = {
-          id: token.user.id,
-          _id: token.user._id,
-          name: token.user.name,
-          username: token.user.username,
-          roles: token.user.roles, // اضافه کردن roles به session
-        };
+        session.user = token.user;
       }
       return session;
     },
   },
   pages: {
-    signIn: "/auth/signin", // مسیر صفحه ورود
-    error: "/auth/signin", // مسیر صفحه خطا (اختیاری)
+    signIn: "/auth/signin",
+    error: "/auth/signin",
   },
-  secret: process.env.NEXTAUTH_SECRET, // کلید رمزنگاری
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/auth/signin/page.tsx
- :// app/auth/signin/page.tsx
-"use client";
+ :"use client";
 import { useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -821,7 +1319,7 @@ export default function SignIn() {
     if (result?.error) {
       setError("نام کاربری یا رمز عبور نامعتبر است");
     } else {
-      router.push('/tests')
+      router.push('/exams')
     }
   };
 
@@ -871,8 +1369,7 @@ export default function SignIn() {
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/auth/signup/page.tsx
- :// app/auth/signup/page.tsx
-"use client";
+ :"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -959,10 +1456,218 @@ export default function SignUp() {
 }
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /app/exams/[id]/add-answers/page.tsx
+ :"use server";
+import AddAnwersPage from "@/components/templates/AddAnwersPage";
+import React from "react";
+
+const AddAnswerPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const id = (await params).id;
+  return <AddAnwersPage examID={id} />;
+};
+
+export default AddAnswerPage;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/exams/[id]/page.tsx
+ :"use server";
+import SingleExamPage from "@/components/templates/SingleExamPage";
+import React from "react";
+
+const ExamPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const id = (await params).id;
+  return <SingleExamPage examID={id} />;
+};
+
+export default ExamPage;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/exams/[id]/result/page.tsx
+ :"use server";
+import ResultPage from "@/components/templates/ResultPage";
+import React from "react";
+
+const ExamResultPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+  const id = (await params).id;
+  return <ResultPage examID={id} />;
+};
+
+export default ExamResultPage;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/exams/page.tsx
+ :// Exams.tsx
+"use client";
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
+import { Toast } from "primereact/toast";
+import { ProgressSpinner } from "primereact/progressspinner";
+import { IntermediateExam } from "@/models/Exam";
+import ExamCard from "@/components/layout/ExamCard";
+import CreateExamForm from "@/components/CreateExamForm";
+import { PrimeIcons } from "primereact/api";
+import { PlusIcon } from "@heroicons/react/24/outline";
+
+export default function Exams() {
+  const [exams, setExams] = useState<IntermediateExam[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const toast = useRef<Toast>(null);
+  const router = useRouter();
+  const session = useSession();
+
+  const fetchExams = async () => {
+    try {
+      const { data } = await axios.get("/api/exams");
+      setExams(data);
+    } catch (error) {
+      showError("خطا در دریافت اطلاعات آزمون‌ها");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const checkSession = async () => {
+      if (session.status !== "loading" && !session.data) {
+        router.push("/auth/signin");
+      } else {
+        fetchExams();
+      }
+    };
+
+    checkSession();
+  }, [session]);
+
+  const handleDeleteExam = async (examId: string) => {
+    try {
+      await axios.delete(`/api/exams/${examId}`);
+      setExams(exams.filter((exam) => exam._id !== examId));
+      showSuccess("آزمون با موفقیت حذف شد");
+    } catch (error) {
+      showError("خطا در حذف آزمون");
+    }
+  };
+
+  const handleToggleViewed = async (examId: string) => {
+    try {
+      await axios.put(`/api/exams/${examId}`, {
+        viewed: !exams.find((t) => t._id === examId)?.viewed,
+      });
+      setExams(
+        exams.map((t) => (t._id === examId ? { ...t, viewed: !t.viewed } : t))
+      );
+    } catch (error) {
+      showError("خطا در بروزرسانی وضعیت");
+    }
+  };
+
+  const showError = (message: string) => {
+    toast.current?.show({
+      severity: "error",
+      summary: "خطا",
+      detail: message,
+      life: 3000,
+    });
+  };
+
+  const showSuccess = (message: string) => {
+    toast.current?.show({
+      severity: "success",
+      summary: "موفق",
+      detail: message,
+      life: 3000,
+    });
+  };
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <ProgressSpinner strokeWidth="4" animationDuration=".5s" />
+      </div>
+    );
+
+  return (
+    <div className="min-h-screen p-8">
+      <div className="max-w-7xl mx-auto">
+        <Toast ref={toast} position="top-left" />
+
+        {/* Header */}
+        <div className="flex justify-between items-center mb-12 glass-panel p-6">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            مدیریت آزمون‌ها
+          </h1>
+          <Button
+            icon={<PlusIcon className="!text-white" />}
+            className="!bg-blue-600 hover:!bg-blue-700 !border-0"
+            onClick={() => setShowCreateModal(true)}
+          />
+        </div>
+
+        {/* Exams Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {exams.map((exam) => (
+            <ExamCard
+              key={exam._id}
+              exam={exam}
+              onDelete={handleDeleteExam}
+              onViewedToggle={handleToggleViewed}
+            />
+          ))}
+        </div>
+
+        {/* Create Exam Dialog */}
+        <Dialog
+          header="ایجاد آزمون جدید"
+          visible={showCreateModal}
+          style={{ width: "90vw", maxWidth: "600px" }}
+          onHide={() => setShowCreateModal(false)}
+          draggable={true}
+          className="glass-panel"
+        >
+          <CreateExamForm
+            onSuccess={() => {
+              setShowCreateModal(false);
+              fetchExams();
+              showSuccess("آزمون جدید با موفقیت ایجاد شد");
+            }}
+          />
+        </Dialog>
+      </div>
+    </div>
+  );
+}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /app/globals.css
- :@tailwind base;
+ :@import "primereact/resources/themes/lara-dark-blue/theme.css" layer(primereact);
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer tailwind-base, primereact, tailwind-utilities;
+
+/* IMPORTANT: In "styled" mode you must add the PrimeReact Theme here. Do NOT include in "unstyled" mode */
+@import "primereact/resources/themes/lara-light-blue/theme.css"
+  layer(primereact);
+
+@layer tailwind-base {
+  @tailwind base;
+}
+
+@layer tailwind-utilities {
+  @tailwind components;
+  @tailwind utilities;
+}
 
 /* styles/fonts.css */
 @font-face {
@@ -984,26 +1689,126 @@ the codes of file with route : /app/globals.css
 }
 
 body {
-  @apply bg-gray-100 dark:bg-slate-900 dark:text-white;
+  @apply text-slate-950 dark:text-white;
   cursor: url("../../public/svg/pen.svg"), auto;
 }
 
+button {
+  @apply px-2 py-1 rounded;
+}
+
 .glass {
-  @apply isolate rounded-xl bg-slate-900/40 shadow-lg ring-1 ring-black/5;
+  @apply isolate rounded-xl bg-slate-900/40 shadow-lg ring-1 ring-black/5 backdrop-blur-3xl;
 }
 
 .default-cursor {
   @apply !cursor-default *:!cursor-default;
 }
 
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.p-tag.p-tag-success {
+  background: #059669 !important;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.p-dialog,
+.p-component,
+.p-dialog-default,
+.p-ripple-disabled,
+.p-dialog-enter-done {
+  @apply dark:!bg-slate-800/80 !bg-white/50;
+  > * {
+    background: transparent !important;
+  }
+}
+
+.blob-container {
+  @apply -z-10 fixed inset-0 w-screen min-h-screen overflow-hidden bg-gray-200 dark:bg-slate-900;
+}
+
+.blob {
+  @apply absolute aspect-square opacity-70 blur-2xl;
+  border-radius: 40% 50% 30% 40%;
+}
+.blob-one {
+  @apply bg-blue-400 w-96 left-[65%] top-[20%];
+  animation: movement 24s ease-in-out infinite both,
+    transform-blob 14s ease-in-out infinite both alternate;
+}
+.blob-two {
+  @apply bg-purple-800 w-72 left-1/4 top-[10%];
+  animation: movement 32s ease-in-out infinite both,
+    transform-blob 12s ease-in-out infinite both alternate;
+}
+.blob-three {
+  @apply bg-violet-950 w-64 left-[42%] bottom-1/4;
+  animation: movement 16s ease-in-out infinite both,
+    transform-blob 10s ease-in-out infinite both alternate;
+}
+
+@keyframes transform-blob {
+  100% {
+    border-radius: 33% 67% 70% 30% / 30% 40% 70% 70%;
+  }
+  20% {
+    border-radius: 37% 63% 51% 49% / 37% 35% 35% 63%;
+  }
+  40% {
+    border-radius: 36% 64% 64% 36% / 64% 48% 52% 26%;
+  }
+  60% {
+    border-radius: 37% 63% 51% 49% / 30% 30% 70% 73%;
+  }
+  80% {
+    border-radius: 40% 60% 42% 58% / 51% 51% 49% 59%;
+  }
+}
+
+@keyframes movement {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translate(-50%, 10%) rotateY(10deg) scale(0.7);
+  }
+  50% {
+    transform: translate(-40%, 50%) rotateY(10deg) scale(1.3);
+  }
+  75% {
+    transform: translate(10%, 50%) rotateY(10deg) scale(0.8);
+  }
+}
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /app/layout.tsx
- :// app/layout.tsx
-import type { Metadata } from "next";
+ :import type { Metadata } from "next";
 import "./globals.css";
 import Settings from "../components/layout/Settings";
 import Providers from "./Provider";
+import Navbar from "@/components/layout/Navbar";
+// import "primereact/resources/themes/lara-dark-blue/theme.css";
+// import "primereact/resources/themes/lara-light-blue/theme.css";
+import "primereact/resources/themes/arya-blue/theme.css";
+import "primereact/resources/themes/lara-light-cyan/theme.css";
+import "primereact/resources/themes/lara-light-indigo/theme.css";
+
 
 export const metadata: Metadata = {
   title: "اپلیکیشن پاسخبرگ",
@@ -1019,38 +1824,239 @@ export default function RootLayout({
     <html lang="fa" dir="rtl">
       <body className={`antialiased`}>
         <Providers>
-          {children}
-          <Settings />
-          {/* <AnimatedCursor
-            innerSize={70}
-            outerSize={0}
-            innerScale={1.2}
-            innerStyle={{
-              opacity: 0.2,
-              background:
-                "radial-gradient(circle, rgba(2,0,36,0.5018382352941176) 0%, rgba(9,22,121,1) 49%, rgba(115,0,255,1) 74%, rgba(124,2,219,0.3253676470588235) 86%, rgba(176,13,13,0.26934523809523814) 100%)",
-            }}
-            outerScale={5}
-            clickables={[
-              "a",
-              'input[type="text"]',
-              'input[type="email"]',
-              'input[type="number"]',
-              'input[type="submit"]',
-              'input[type="image"]',
-              "label[for]",
-              "select",
-              "textarea",
-              "button",
-              ".link",
-            ]}
-            showSystemCursor
-          /> */}
+          <div className="w-full h-full z-10">
+            {children}
+            <Navbar />
+            <Settings />
+          </div>
+          <div className="blob-container">
+            <div className="blob blob-one"></div>
+            <div className="blob blob-two"></div>
+            <div className="blob blob-three"></div>
+          </div>
         </Providers>
       </body>
     </html>
   );
 }
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/master/admins/[adminId]/page.tsx
+ :"use server";
+import SingleAdminManage from "@/components/master/SingleAdminManage";
+import mongoose from "mongoose";
+import React from "react";
+
+const SingleAdminManagePage = async ({
+  params,
+}: {
+  params: Promise<{ adminId: string }>;
+}) => {
+  const adminId = (await params).adminId as unknown as mongoose.Types.ObjectId || "";
+  
+  return <SingleAdminManage adminId={adminId} />;
+};
+
+export default SingleAdminManagePage;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /app/master/admins/page.tsx
+ :"use client";
+import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { IUser } from "@/models/User";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { InputText } from "primereact/inputtext";
+import { Toast } from "primereact/toast";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { Button } from "primereact/button";
+import {
+  ExclamationCircleIcon,
+  TrashIcon,
+  PlusIcon,
+  ArrowLongLeftIcon,
+} from "@heroicons/react/24/outline";
+import mongoose from "mongoose";
+import { Loader } from "@/components/Loader";
+import Link from "next/link";
+import UserSelectionPopup from '@/components/layout/UserSelectionPopup'
+
+const SingleAdminManage = () => {
+  const { data: session } = useSession();
+  const [globalFilter, setGlobalFilter] = useState<string>("");
+  const [isAddUserModalVisible, setIsAddUserModalVisible] = useState(false);
+  const toast = useRef<Toast>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [allUsers, setAllUsers] = useState<IUser[]>([]);
+  const [allAdmins, setAllAdmins] = useState<IUser[]>([]);
+
+  const fetchUsers = async () => {
+    const adminId =
+      (session?.user?._id as unknown as mongoose.Types.ObjectId) || "";
+    if (!session?.user?._id || !adminId) return;
+
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/master/admins");
+      if (!res.ok) throw new Error("Failed to fetch users");
+      const { admins, users } = await res.json();
+      setAllUsers(users);
+      setAllAdmins(admins);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching all admins:", error);
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (session?.user?.roles?.includes("master")) {
+      fetchUsers();
+    }
+  }, [session]);
+
+  const showToast = (severity: "success" | "error", message: string) => {
+    toast.current?.show({
+      severity,
+      summary: severity === "success" ? "Success" : "Error",
+      detail: message,
+    });
+  };
+
+  const handleAddAdmin = async (
+    selectedUsers: IUser[],
+    callback?: () => void
+  ) => {
+    try {
+      const res = await fetch("/api/master/admins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add-admin",
+          userIds: selectedUsers.map((u) => u._id),
+        }),
+      });
+
+      if (res.ok) {
+        showToast("success", "مدیران با موفقیت اضافه شدند");
+        fetchUsers();
+        setIsAddUserModalVisible(false);
+        callback?.();
+      } else {
+        showToast("error", "خطا در افزودن مدیران");
+      }
+    } catch (error) {
+      showToast("error", "خطا در ارتباط با سرور");
+    }
+  };
+
+  const handleRemoveFromَAdmins = async (user: IUser) => {
+    confirmDialog({
+      header: "حذف کاربر از لیست مدیران",
+      message: (
+        <div className="flex items-center">
+          <ExclamationCircleIcon className="text-2xl mx-2 text-red-500" />
+          <h3>
+            آیا مطمئن هستید که می‌خواهید کاربر{" "}
+            <span className="text-primary">{user.name}</span> را از لیست مدیران
+            حذف کنید؟
+          </h3>
+        </div>
+      ),
+      accept: async () => {
+        try {
+          const res = await fetch(`/api/master/admins`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "remove-admin",
+              adminId: user._id,
+            }),
+          });
+
+          if (res.ok) {
+            showToast("success", "کاربر با موفقیت از زیرمجموعه حذف شد");
+            fetchUsers();
+          } else {
+            showToast("error", "خطا در حذف کاربر از زیرمجموعه");
+          }
+        } catch (error) {
+          showToast("error", "خطا در ارتباط با سرور");
+        }
+      },
+      acceptLabel: "آره، حذفش کن",
+      rejectLabel: "بی خیال",
+    });
+  };
+
+  if (isLoading) return <Loader />;
+
+  return (
+    <>
+      <section className="bg-white rounded-md shadow-md p-5">
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <InputText
+              placeholder="جستجو..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="w-64"
+            />
+            <Button
+              icon={<PlusIcon className="h-5 w-5" />}
+              label="افزودن کاربر"
+              onClick={() => setIsAddUserModalVisible(true)}
+              className="p-button-success"
+            />
+          </div>
+          <DataTable
+            value={allAdmins}
+            editMode="row"
+            dataKey="_id"
+            tableStyle={{ minWidth: "15rem" }}
+            className="w-full border rounded-md overflow-hidden"
+            paginator
+            rows={10}
+            rowsPerPageOptions={[5, 10, 25]}
+          >
+            <Column field="name" header="نام" />
+            <Column field="username" header="نام کاربری" />
+            <Column
+              header="عملیات"
+              body={(rowData: IUser) => (
+                <div className="flex items-center gap-2">
+                  <Button
+                    icon={<TrashIcon className="h-4 w-4 text-red-500" />}
+                    className="p-button-text p-button-danger"
+                    onClick={() => handleRemoveFromَAdmins(rowData)}
+                  />
+                  <Link href={`admins/${rowData._id}`}>
+                    <ArrowLongLeftIcon width={20} className="text-blue-500" />
+                  </Link>
+                </div>
+              )}
+            />
+          </DataTable>
+        </div>
+      </section>
+
+      <UserSelectionPopup
+        isShow={isAddUserModalVisible}
+        setIsShow={setIsAddUserModalVisible}
+        users={allUsers}
+        onSubmit={handleAddAdmin}
+      />
+
+      <Toast ref={toast} />
+      <ConfirmDialog />
+    </>
+  );
+};
+
+export default SingleAdminManage;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1062,9 +2068,9 @@ import Link from "next/link";
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900">
-      <div className=" [background-image:url('/hero.png')] bg-no-repeat bg-cover bg-center">
-        <div className="backdrop-blur-3xl">
+    <div className="min-h-screen">
+      <div className=" [background-image:url('/hero.png') bg-no-repeat bg-cover bg-center">
+        <div className="backdrop-blur-3x">
           <div className="max-w-7xl mx-auto py-16 px-5">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
@@ -1082,7 +2088,7 @@ const Home = () => {
               <div className="flex justify-center items-center gap-4">
                 <div className="flex justify-center gap-4">
                   <Link
-                    href="/tests"
+                    href="/exams"
                     className="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors text-lg"
                   >
                     شروع کنید
@@ -1116,246 +2122,6 @@ const Home = () => {
 };
 
 export default Home;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-the codes of file with route : /app/tests/[id]/add-answers/page.tsx
- :"use server";
-import AddAnwersPage from "@/components/templates/AddAnwersPage";
-import React from "react";
-
-const TestPage = async ({ params }: { params: Promise<{ id: string }> }) => {
-  const id = (await params).id;
-  return <AddAnwersPage testID={id} />;
-};
-
-export default TestPage;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-the codes of file with route : /app/tests/[id]/page.tsx
- :"use server";
-import SingleTestPage from "@/components/templates/SingleTestPage";
-import React from "react";
-
-const TestPage = async ({ params }: { params: Promise<{ id: string }> }) => {
-  const id = (await params).id;
-  return <SingleTestPage testID={id} />;
-};
-
-export default TestPage;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-the codes of file with route : /app/tests/[id]/result/page.tsx
- :"use server";
-import AddAnwersPage from "@/components/templates/AddAnwersPage";
-import ResultPage from "@/components/templates/ResultPage";
-import React from "react";
-
-const TestResultPage = async ({ params }: { params: Promise<{ id: string }> }) => {
-  const id = (await params).id;
-  return <ResultPage testID={id} />;
-};
-
-export default TestResultPage;
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-the codes of file with route : /app/tests/page.tsx
- :"use client";
-import { useState, useEffect } from "react";
-import {
-  PlusIcon,
-  DocumentTextIcon,
-  TrashIcon,
-  ArrowRightOnRectangleIcon,
-  DocumentCheckIcon,
-} from "@heroicons/react/24/outline";
-import Link from "next/link";
-import axios from "axios";
-import CreateTestModal from "@/components/CreateTestModal";
-import ConfirmModal from "@/components/ConfirmModal";
-import { ITest, IntermediateTest } from "@/models/Test";
-import { Loader } from "@/components/Loader";
-import { useSession } from "next-auth/react";
-
-import { signOut } from "next-auth/react"; // Import تابع signOut
-import { useRouter } from "next/navigation";
-import { Session } from "next-auth";
-
-export default function Tests() {
-  const [tests, setTests] = useState<IntermediateTest[]>([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [testToDelete, setTestToDelete] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-  // const [session, setSession] = useState<Session>();
-  const session = useSession();
-
-  useEffect(() => {
-    const checkSession = async () => {
-      if (session.status !== "loading" && !session.data) {
-        router.push("/auth/signin");
-      } else {
-        fetchTests();
-      }
-    };
-
-    const fetchTests = async () => {
-      console.log("session", session);
-      const { data } = await axios.get("/api/tests");
-      setTests(data);
-      setIsLoading(false);
-    };
-
-    checkSession();
-  }, [session]);
-
-  const handleDeleteTest = async () => {
-    if (!testToDelete) return;
-
-    try {
-      await axios.delete(`/api/tests/${testToDelete}`);
-      setTests(tests.filter((test) => test._id !== testToDelete));
-      setShowConfirmModal(false);
-    } catch (error) {
-      console.error("Failed to delete test:", error);
-    }
-  };
-
-  const handleToggleViewed: any = async (testId: string) => {
-    try {
-      await axios.put(`/api/tests/${testId}`, {
-        viewed: !tests.find((t) => t._id === testId)?.viewed,
-      });
-      setTests(
-        tests.map((t) => (t._id === testId ? { ...t, viewed: !t.viewed } : t))
-      );
-    } catch (error) {
-      console.error("خطا در بروزرسانی وضعیت رویت:", error);
-    }
-  };
-
-  if (isLoading) return <Loader />;
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto">
-        {/* هدر */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-            آزمون‌های من
-          </h1>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-600 transition-colors shadow-lg hover:shadow-blue-500/50"
-            >
-              <PlusIcon className="w-5 h-5" />
-              آزمون جدید
-            </button>
-            {/* دکمه Logout */}
-            <button
-              onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-600 transition-colors shadow-lg hover:shadow-red-500/50"
-            >
-              <ArrowRightOnRectangleIcon className="w-5 h-5" />
-              خروج
-            </button>
-          </div>
-        </div>
-
-        {/* لیست آزمون‌ها */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tests.map((test) => (
-            <div
-              key={test._id}
-              className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-300 relative group"
-            >
-              <div className="absolute bottom-4 left-4 flex flex-col items-end">
-                <Link href={`/tests/${test._id}/add-answers`}>
-                  <DocumentCheckIcon
-                    width={30}
-                    className="text-green-500 m-2 hover:text-green-600"
-                  />
-                </Link>
-                <label className="flex gap-2 cursor-pointer">
-                  رویت شده :
-                  <div className="flex items-center relative">
-                    <input
-                      type="checkbox"
-                      checked={test.viewed}
-                      onChange={() => handleToggleViewed(test._id)}
-                      className="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-slate-300 checked:bg-blue-600 checked:border-blue-600"
-                      id="check1"
-                    />
-                    <span className="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-3.5 w-3.5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        stroke="currentColor"
-                        strokeWidth="1"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        ></path>
-                      </svg>
-                    </span>
-                  </div>
-                </label>
-              </div>
-              {/* دکمه حذف */}
-              <button
-                onClick={() => {
-                  setTestToDelete(test._id);
-                  setShowConfirmModal(true);
-                }}
-                className="absolute top-4 left-4 p-2 text-red-500 hover:text-red-600 transition-opacity duration-300"
-              >
-                <TrashIcon className="w-6 h-6" />
-              </button>
-
-              {/* محتوای کارت */}
-              <Link href={`/tests/${test._id}/result`}>
-                <DocumentTextIcon className="w-8 h-8 text-blue-500 mb-4" />
-                <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">
-                  {test.title}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">
-                  سوالات {test.startQuestion} تا {test.endQuestion}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  {new Date(test.startTime).toLocaleDateString("fa-IR")}
-                </p>
-              </Link>
-            </div>
-          ))}
-        </div>
-
-        {/* مودال ایجاد آزمون */}
-        <CreateTestModal
-          open={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-        />
-
-        {/* مودال تأیید حذف */}
-        <ConfirmModal
-          open={showConfirmModal}
-          onClose={() => setShowConfirmModal(false)}
-          onConfirm={handleDeleteTest}
-          title="حذف آزمون"
-          description="آیا مطمئن هستید که می‌خواهید این آزمون را حذف کنید؟ این عمل برگشت‌ناپذیر است."
-        />
-      </div>
-    </div>
-  );
-}
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1428,9 +2194,99 @@ console.log(`SAVED IN ${outputFile} `);
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /components/AssistantManager.tsx
+ :"use client";
+import { useState } from "react";
+import { IUser } from "@/models/User";
+
+export default function AssistantManager({ admin }: { admin: IUser }) {
+  const [selectedUser, setSelectedUser] = useState<string>("");
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [users, setUsers] = useState<IUser[]>([]);
+
+  const loadUsers = async () => {
+    const res = await fetch('/api/admin/users');
+    const data = await res.json();
+    setUsers(data.filter((u: IUser) => u.roles.includes('user')));
+  };
+
+  const handleAddAssistant = async () => {
+    const res = await fetch('/api/admin/hierarchy', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        action: 'add-assistant',
+        adminId: admin._id,
+        userId: selectedUser,
+        permissions
+      })
+    });
+    
+    if(res.ok) {
+      // Alert('دستیار با موفقیت اضافه شد');
+      loadUsers();
+    }
+  };
+
+  const handlePermissionChange = (perm: string) => {
+    const newPerms = permissions.includes(perm)
+      ? permissions.filter(p => p !== perm)
+      : [...permissions, perm];
+    
+    if(admin.permissions.some(p => newPerms.includes(p))) {
+      setPermissions(newPerms);
+    } else {
+      // Alert.error('دستیار نمی تواند دسترسی بیشتری از ادمین داشته باشد');
+    }
+  };
+
+  return (
+    <div className="p-4 border rounded-lg mb-4">
+      <h3 className="text-xl mb-4">مدیریت دستیارها</h3>
+      
+      <div className="grid grid-cols-2 gap-4">
+        {/* <Select
+          value={selectedUser}
+          onChange={(e) => setSelectedUser(e.target.value)}
+          displayEmpty
+          className="w-full"
+        >
+          <option value="">انتخاب کاربر</option>
+          {users.map(user => (
+            <option key={user._id} value={user._id}>
+              {user.name} ({user.username})
+            </option>
+          ))}
+        </Select> */}
+
+        <div className="grid grid-cols-2 gap-2">
+          {admin.permissions?.map(perm => (
+            <div key={perm} className="flex items-center">
+              {/* <Checkbox
+                checked={permissions.includes(perm)}
+                onChange={() => handlePermissionChange(perm)}
+              /> */}
+              <span>{perm}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* <Button 
+        variant="contained" 
+        className="mt-4"
+        onClick={handleAddAssistant}
+        disabled={!selectedUser || permissions.length === 0}
+      >
+        افزودن دستیار
+      </Button> */}
+    </div>
+  );
+}
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /components/ConfirmModal.tsx
- :// components/ConfirmModal.tsx
-"use client";
+ :"use client";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface ConfirmModalProps {
@@ -1492,50 +2348,42 @@ export default function ConfirmModal({
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-the codes of file with route : /components/CreateTestModal.tsx
- :// components/CreateTestModal.tsx
-"use client";
+the codes of file with route : /components/CreateExamForm.tsx
+ :"use client";
 import { useState } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 
-interface CreateTestModalProps {
-  open: boolean;
-  onClose: () => void;
+interface CreateExamModalProps {
+  onSuccess?: () => void;
 }
 
-export default function CreateTestModal({
-  open,
-  onClose,
-}: CreateTestModalProps) {
-  const router = useRouter();
+export default function CreateExamForm({ onSuccess }: CreateExamModalProps) {
   const [formData, setFormData] = useState({
     title: "",
     loading: false,
     error: "",
   });
-  const [startQuestion, setStartQuestion] = useState('0');
-  const [endQuestion, setEndQuestion] = useState('10');
+  const [startQuestion, setStartQuestion] = useState("0");
+  const [endQuestion, setEndQuestion] = useState("10");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormData((prev) => ({ ...prev, loading: true, error: "" }));
-    if(!startQuestion || !endQuestion) return;
-    
-    const sortedNumbers = [Math.floor(Number(startQuestion)),Math.floor(Number(endQuestion))].sort(
-      (a, b) => a - b
-    );
+    if (!startQuestion || !endQuestion) return;
+
+    const sortedNumbers = [
+      Math.floor(Number(startQuestion)),
+      Math.floor(Number(endQuestion)),
+    ].sort((a, b) => a - b);
 
     try {
-      const { data } = await axios.post("/api/tests", {
+      await axios.post("/api/exams", {
         title: formData.title,
         startQuestion: sortedNumbers[0],
         endQuestion: sortedNumbers[1],
       });
 
-      router.push(`/tests/${data._id}`);
-      onClose();
+      onSuccess?.();
     } catch (error: any) {
       setFormData((prev) => ({
         ...prev,
@@ -1548,99 +2396,80 @@ export default function CreateTestModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" dir="rtl">
-      <div className="bg-white dark:bg-slate-800 rounded-lg w-full max-w-md relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 left-4 p-1 rounded-full hover:bg-gray-100"
-        >
-          <XMarkIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-        </button>
+    <div className="p-6">
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="title"
+              className="block mb-1 text-sm text-gray-600 dark:text-gray-300"
+            >
+              عنوان آزمون
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={formData.title}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
+              className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+              maxLength={50}
+            />
+          </div>
 
-        <div className="p-6">
-          <h2 className="text-xl font-semibold mb-6">ایجاد آزمون جدید</h2>
-
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="title"
-                  className="block mb-1 text-sm text-gray-600 dark:text-gray-300"
-                >
-                  عنوان آزمون
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                  maxLength={50}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="startQuestion"
-                    className="block mb-1 text-sm text-gray-600 dark:text-gray-300"
-                  >
-                    شماره سوال شروع
-                  </label>
-                  <input
-                    type="number"
-                    id="startQuestion"
-                    value={startQuestion}
-                    onChange={(e) =>
-                      setStartQuestion(e.target.value)
-                    }
-                    className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="endQuestion"
-                    className="block mb-1 text-sm text-gray-600 dark:text-gray-300"
-                  >
-                    شماره سوال پایان
-                  </label>
-                  <input
-                    type="number"
-                    id="endQuestion"
-                    value={endQuestion}
-                    onChange={(e) =>
-                      setEndQuestion(e.target.value)
-                    }
-                    className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              {formData.error && (
-                <div className="text-red-500 text-sm mt-2">
-                  {formData.error}
-                </div>
-              )}
-
-              <div className="mt-6">
-                <button
-                  type="submit"
-                  disabled={formData.loading}
-                  className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                >
-                  {formData.loading ? "در حال ایجاد..." : "ایجاد آزمون"}
-                </button>
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="startQuestion"
+                className="block mb-1 text-sm text-gray-600 dark:text-gray-300"
+              >
+                شماره سوال شروع
+              </label>
+              <input
+                type="number"
+                id="startQuestion"
+                value={startQuestion}
+                onChange={(e) => setStartQuestion(e.target.value)}
+                className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
             </div>
-          </form>
+
+            <div>
+              <label
+                htmlFor="endQuestion"
+                className="block mb-1 text-sm text-gray-600 dark:text-gray-300"
+              >
+                شماره سوال پایان
+              </label>
+              <input
+                type="number"
+                id="endQuestion"
+                value={endQuestion}
+                onChange={(e) => setEndQuestion(e.target.value)}
+                className="w-full p-2 border dark:bg-gray-700 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+          </div>
+
+          {formData.error && (
+            <div className="text-red-500 text-sm mt-2">{formData.error}</div>
+          )}
+
+          <div className="mt-6">
+            <button
+              type="submit"
+              disabled={formData.loading}
+              className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+            >
+              {formData.loading ? "در حال ایجاد..." : "ایجاد آزمون"}
+            </button>
+          </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
@@ -1785,12 +2614,51 @@ export default KeyBoard;
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /components/Loader.tsx
- :// components/Loader.tsx
-export const Loader = () => (
+ :export const Loader = () => (
   <div className="fixed inset-0 bg-slate-800 flex items-center justify-center z-50">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
   </div>
 );
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/PaginationControls.tsx
+ :interface PaginationControlsProps {
+  currentPage: number;
+  totalPages: number;
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+const PaginationControls = ({
+  currentPage,
+  totalPages,
+  onPrev,
+  onNext,
+}: PaginationControlsProps) => {
+  return (
+    <div className="flex items-center justify-between mt-4">
+      <button
+        onClick={onPrev}
+        disabled={currentPage === 1}
+      >
+        قبلی
+      </button>
+      
+      <span className="text-sm text-gray-600">
+        صفحه {currentPage} از {totalPages}
+      </span>
+      
+      <button
+        onClick={onNext}
+        disabled={currentPage === totalPages}
+      >
+        بعدی
+      </button>
+    </div>
+  );
+};
+
+export default PaginationControls;
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /components/QuestionNavigation.tsx
@@ -1820,7 +2688,6 @@ export default function QuestionNavigation({
   const itemsPerPage = 10
   const totalPages = Math.ceil(questions?.length / itemsPerPage)
 
-  // پیکربندی برای نمایش دسکتاپ
   const DesktopView = () => (
     <div className="hidden md:block w-64">
       <div className="grid grid-cols-5 gap-2">
@@ -1845,7 +2712,6 @@ export default function QuestionNavigation({
     </div>
   )
 
-  // پیکربندی برای نمایش موبایل
   const MobilePagination = () => (
     <div className="md:hidden">
       <div className="flex justify-between items-center mb-4">
@@ -1906,9 +2772,34 @@ export default function QuestionNavigation({
 }
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /components/RoleBadge.tsx
+ :interface RoleBadgeProps {
+  role: string;
+}
+
+const RoleBadge = ({ role }: RoleBadgeProps) => {
+  const getRoleColor = () => {
+    switch (role) {
+      case "admin":
+        return "primary";
+      case "assistant":
+        return "secondary";
+      case "user":
+        return "default";
+      default:
+        return "default";
+    }
+  };
+
+  return <></>;
+};
+
+export default RoleBadge;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /components/Timer.tsx
- :// components/Timer.tsx
-'use client'
+ :'use client'
 
 import { ClockIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
@@ -1947,10 +2838,179 @@ export default function Timer({ startTime, endTime }: TimerProps) {
 }
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /components/UserAvatar.tsx
+ :interface UserAvatarProps {
+  user: {
+    name: string;
+    avatarUrl?: string;
+  };
+}
+
+const UserAvatar = ({ user }: UserAvatarProps) => {
+  return (
+    <></>
+  );
+};
+
+export default UserAvatar;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/admin/AuditLogTable.tsx
+ :
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/admin/PermissionMatrix.tsx
+ :interface Permission {
+  id: string;
+  name: string;
+  read: boolean;
+  create: boolean;
+  update: boolean;
+  delete: boolean;
+}
+
+export type ActionT = "read" | "create" | "update" | "delete";
+
+interface PermissionMatrixProps {
+  permissions: Permission[];
+  onUpdate: (moduleId: string, action: string, value: boolean) => void;
+}
+
+const PermissionMatrix = ({ permissions, onUpdate }: PermissionMatrixProps) => {
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead>
+          <tr>
+            <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ماژول
+            </th>
+            <th className="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              مشاهده
+            </th>
+            <th className="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ایجاد
+            </th>
+            <th className="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ویرایش
+            </th>
+            <th className="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              حذف
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {permissions.map((module) => (
+            <tr key={module.id}>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {module.name}
+              </td>
+              {(["read", "create", "update", "delete"] as ActionT[]).map(
+                (action) => (
+                  <td
+                    key={action}
+                    className="px-6 py-4 whitespace-nowrap text-center"
+                  >
+                    {/* <Switch
+                      checked={module[action]}
+                      onChange={(e) =>
+                        onUpdate(module.id, action, e.target.checked)
+                      }
+                      color="primary"
+                    /> */}
+                  </td>
+                )
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default PermissionMatrix;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/admin/StatisticsCards.tsx
+ :import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  KeyIcon,
+  ShieldCheckIcon,
+  UserIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { Component } from "react";
+
+interface Props {
+  key: any;
+  icon: any;
+  title: string;
+  value: number | string;
+  trend: number;
+}
+
+const StatisticsCard = ({ icon, title, value, trend }: Props) => {
+  const trendColor = trend > 0 ? "text-green-500" : "text-red-500";
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className="p-6 bg-white rounded-xl shadow-md flex items-center gap-4"
+    >
+      <div className="p-3 bg-blue-100 rounded-lg text-blue-500">{icon}</div>
+
+      <div>
+        <h3 className="text-gray-500 text-sm mb-1">{title}</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-2xl font-bold">{value}</span>
+          <span className={`flex items-center ${trendColor}`}>
+            {trend}%
+            {trend > 0 ? (
+              <ArrowUpIcon width={16} />
+            ) : (
+              <ArrowDownIcon width={16} />
+            )}
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const StatisticsCards = () => {
+  const stats = [
+    { icon: <UsersIcon />, title: "کل کاربران", value: "1,234", trend: 12 },
+    { icon: <ShieldCheckIcon />, title: "ادمین‌ها", value: "45", trend: 5 },
+    { icon: <UserIcon />, title: "دستیارها", value: "89", trend: -3 },
+    { icon: <KeyIcon />, title: "فعالیت امروز", value: "256", trend: 8 },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {stats.map((stat, index) => (
+        <StatisticsCard key={index} {...stat} />
+      ))}
+    </div>
+  );
+};
+
+
+export default StatisticsCards;
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/admin/UserHierarchyTree.tsx
+ :
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /components/layout/AddAnswerQuestionRow.tsx
  :"use client";
 
-import { IQuestion } from "@/models/Test";
+import { IQuestion } from "@/models/Exam";
 import { foramttMin } from "@/utils/funcs";
 import React, {
   Dispatch,
@@ -2055,10 +3115,236 @@ export default AddAnswerQuestionRow;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+the codes of file with route : /components/layout/ExamCard.tsx
+ :// ExamCard.tsx
+import { IExam, IntermediateExam } from "@/models/Exam";
+import { Card } from "primereact/card";
+import { Button } from "primereact/button";
+import { ConfirmPopup } from "primereact/confirmpopup";
+import { Toast } from "primereact/toast";
+import { useRef } from "react";
+import { TriStateCheckbox } from "primereact/tristatecheckbox";
+import Link from "next/link";
+import { formatDate } from "@/utils/funcs";
+import {
+  ClipboardDocumentListIcon,
+  ExclamationCircleIcon,
+  PlayIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+
+interface Props {
+  exam: IntermediateExam;
+  onDelete: (examId: string) => void;
+  onViewedToggle: (examId: string) => void;
+}
+
+const ExamCard = ({ exam, onDelete, onViewedToggle }: Props) => {
+  const toast = useRef<Toast>(null);
+  const isExamPassed = Boolean(exam.endTime);
+  const isStarted = Boolean(exam.startTime);
+
+  const header = (
+    <div className="glass-effect h-32 relative rounded-lg overflow-hidden">
+      <div className="absolute inset-0 bg-blue-500/20 backdrop-blur-sm flex justify-center items-center " />
+      <div className="relative p-4 flex justify-center items-center text-slate-950 dark:text-white h-full">
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-3">{exam.title}</h2>
+          <p className="text-sm opacity-75">
+            {formatDate(exam.startTime)} - {exam.questions.length} سوال
+          </p>
+        </div>
+        <i
+          className={`pi ${isExamPassed ? "pi-history" : "pi-play"} text-3xl`}
+        />
+      </div>
+    </div>
+  );
+
+  const footer = (
+    <div className="flex justify-between items-center">
+      <TriStateCheckbox
+        checked={exam.viewed}
+        onChange={(e) => onViewedToggle(exam._id)}
+        className="[&>div]:border-white"
+        tooltip="تغییر وضعیت رویت"
+        tooltipOptions={{ position: "left" }}
+      />
+      <TriStateCheckbox checked={true} />
+      <div className="flex gap-2">
+        <Button
+          icon={
+            <TrashIcon
+              width={20}
+              className="!text-red-500 hover:!text-red-600"
+            />
+          }
+          severity="danger"
+          rounded
+          onClick={(e) => {
+            toast.current?.show({
+              sticky: true,
+              content: (
+                <div className="flex w-full gap-2 items-center">
+                  <ExclamationCircleIcon width={20} className="text-red-500" />
+                  <p>از حذف مطمئنی ؟؟!</p>
+                  <div className="flex">
+                    <Button
+                      className="!bg-red-500 !text-red-500"
+                      color="red"
+                      onClick={() => onDelete(exam._id)}
+                    >
+                      آره
+                    </Button>
+                  </div>
+                </div>
+              ),
+            });
+          }}
+        />
+        <Link href={`/exams/${exam._id}${isExamPassed ? "/result" : ""}`}>
+          <Button
+            icon={
+              isExamPassed ? (
+                <ClipboardDocumentListIcon
+                  width={20}
+                  className="text-green-500"
+                />
+              ) : (
+                <PlayIcon width={20} className="text-yellow-500" />
+              )
+            }
+            rounded
+            severity="secondary"
+          />
+        </Link>
+      </div>
+    </div>
+  );
+
+  return (
+    <Card
+      header={header}
+      footer={footer}
+      className="!bg-white/10 dark:!bg-gray-800/50 !backdrop-blur-3xl  !border-none !shadow-lg hover:!shadow-xl transition-all hover:scale-[1.02 h-full"
+    >
+      <Toast ref={toast} position="bottom-center" />
+      <div className="grid grid-cols-2 gap-4 text-center">
+        <div className="glass-panel p-3">
+          <p className="text-sm opacity-75 mb-1">شماره سوالات</p>
+          <p className="font-bold">
+            {exam.startQuestion} - {exam.endQuestion}
+          </p>
+        </div>
+        <div className="glass-panel p-3">
+          <p className="text-sm opacity-75 mb-1">وضعیت</p>
+          <p
+            className={`font-bold ${
+              isStarted
+                ? isExamPassed
+                  ? "text-green-400"
+                  : "text-amber-400"
+                : "text-blue-500"
+            }`}
+          >
+            {isStarted
+              ? isExamPassed
+                ? "اجرا شده"
+                : "در انتظار اجرا"
+              : "در حال اجرا"}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+export default ExamCard;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/layout/ExamResultQuestionRow.tsx
+ :"use client";
+
+import { IQuestion } from "@/models/Exam";
+import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { foramttMin } from "@/utils/funcs";
+
+interface Props {
+  question: IQuestion;
+}
+
+const ExamResultQuestionRow = ({ question }: Props) => {
+  const { answer, selectedOption, number, timeSpent } = question;
+
+  const renderOptionButton = (i: number) => {
+    const isSelected = selectedOption === i + 1;
+    const isCorrect = answer === i + 1;
+    const bgColor = answer?
+      isSelected
+      ? isCorrect
+        ? "bg-green-500 text-white"
+        : "bg-red-500"
+      : isCorrect
+      ? "border-2 border-green-500"
+      : "bg-blue-400/10"
+      : isSelected
+      ? "bg-blue-500"
+      :"bg-blue-400/10"
+    return (
+      <button
+        key={`${number}--${i}`}
+        className={`w-9 h-7 p-0 rounded-full cursor-pointer ${bgColor}`}
+      >
+        {i + 1}
+      </button>
+    );
+  };
+
+  const renderIcon = () => {
+    if (!answer) return null;
+    if (!selectedOption)
+      return <div className="w-4 h-4 rounded-full border-2 border-slate-500" />;
+    if (selectedOption === answer)
+      return <CheckIcon className="text-green-500" width={20} />;
+    return <XMarkIcon className="text-red-500" width={20} />;
+  };
+
+  return (
+    <div className="flex items-center rounded-md">
+      <button className="hover:bg-blue-500/20 flex justify-center items-center min-w-10 px-2 transition-colors rounded place-self-stretch">
+        {number}
+      </button>
+      <div className="flex gap-1 p-2 pl-0">
+        {Array(4)
+          .fill(0)
+          .map((_, i) => renderOptionButton(i))}
+      </div>
+      <div>{renderIcon()}</div>
+      <div className="px-2">{foramttMin(timeSpent)}</div>
+    </div>
+  );
+};
+
+export default ExamResultQuestionRow;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/layout/Navbar.tsx
+ :"use client";
+
+export default function Navbar() {
+  return (
+    <></>
+  );
+}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 the codes of file with route : /components/layout/QuestionRow.tsx
  :"use client";
 
-import { IQuestion } from "@/models/Test";
+import { IQuestion } from "@/models/Exam";
 import { foramttMin } from "@/utils/funcs";
 import React, {
   Dispatch,
@@ -2195,6 +3481,7 @@ the codes of file with route : /components/layout/Settings.tsx
  :"use client";
 
 import {
+  ArrowLeftStartOnRectangleIcon,
   Cog6ToothIcon,
   CursorArrowRaysIcon,
   CursorArrowRippleIcon,
@@ -2205,6 +3492,7 @@ import {
 import React, { useState, useEffect } from "react";
 import AnimatedCursor from "react-animated-cursor";
 import KeyBoard from "../KeyBoard";
+import { signOut } from "next-auth/react";
 
 const Settings = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -2212,7 +3500,6 @@ const Settings = () => {
   const [mouseRipple, setMouseRipple] = useState(true);
   const [isKeyBoardVisible, setIsKeyBoardVisible] = useState(false);
 
-  // بررسی حالت سیستم عامل و localStorage هنگام لود صفحه
   useEffect(() => {
     const isDarkMode =
       localStorage.theme === "dark" ||
@@ -2227,7 +3514,6 @@ const Settings = () => {
     updateMouseRipple(isMouseRipple);
   }, []);
 
-  // اعمال تغییرات دارک مود به HTML
   const updateDarkMode = (isDark: boolean) => {
     if (isDark) {
       document.documentElement.classList.add("dark");
@@ -2248,7 +3534,6 @@ const Settings = () => {
     }
   };
 
-  // تغییر حالت دارک مود
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
@@ -2279,7 +3564,7 @@ const Settings = () => {
 
       {/* پنل تنظیمات */}
       <div
-        className={`fixed z-30 bottom-20 left-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg p-4 space-y-4 transition-all duration-300 ${
+        className={`fixed z-50 bottom-20 left-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg p-4 space-y-4 transition-all duration-300 ${
           isOpen
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-4 pointer-events-none"
@@ -2329,11 +3614,21 @@ const Settings = () => {
             }`}
           />
         </button>
+
+        {/* logout */}
+        <button
+          className="flex items-center justify-center w-12 h-12 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors !bg-red-500 text-white hover:!bg-red-600 shadow-lg hover:shadow-red-500/50"
+          onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+          aria-label="Toggle dark mode"
+        >
+          <ArrowLeftStartOnRectangleIcon
+            width={24}
+          />
+        </button>
       </div>
       {mouseRipple ? (
         <AnimatedCursor
           showSystemCursor
-          // showSystemCursor={!mouseRipple}
           innerSize={12}
           outerSize={24}
           color="#002fff41"
@@ -2347,7 +3642,6 @@ const Settings = () => {
           }}
           outerStyle={{
             border: "2px solid #002fff",
-            // animation: 'spin 2s linear infinite'
           }}
           clickables={[
             "a",
@@ -2376,70 +3670,267 @@ export default Settings;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-the codes of file with route : /components/layout/TestResultQuestionRow.tsx
- :"use client";
-
-import { IQuestion } from "@/models/Test";
-import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { foramttMin } from "@/utils/funcs";
+the codes of file with route : /components/layout/UserSelectionPopup.tsx
+ :import { Dialog } from "primereact/dialog";
+import { Button } from "primereact/button";
+import { Checkbox } from "primereact/checkbox";
+import { IUser } from "@/models/User";
+import { useState, Dispatch, SetStateAction } from "react";
 
 interface Props {
-  question: IQuestion;
+  isShow: boolean;
+  setIsShow: Dispatch<SetStateAction<boolean>>;
+  users: IUser[];
+  onSubmit: (selectedUsers: IUser[], callback?: () => void) => void;
 }
 
-const TestResultQuestionRow = ({ question }: Props) => {
-  const { answer, selectedOption, number, timeSpent } = question;
+const UserSelectionPopup = ({ isShow, onSubmit, setIsShow, users }: Props) => {
+  const [selectedUsers, setSelectedUsers] = useState<IUser[]>([]);
 
-  const renderOptionButton = (i: number) => {
-    const isSelected = selectedOption === i + 1;
-    const isCorrect = answer === i + 1;
-    const bgColor = answer?
-      isSelected
-      ? isCorrect
-        ? "bg-green-500 text-white"
-        : "bg-red-500"
-      : isCorrect
-      ? "border-2 border-green-500"
-      : "bg-blue-400/10"
-      : isSelected
-      ? "bg-blue-500"
-      :"bg-blue-400/10"
-    return (
-      <button
-        key={`${number}--${i}`}
-        className={`w-9 h-7 p-0 rounded-full cursor-pointer ${bgColor}`}
-      >
-        {i + 1}
-      </button>
-    );
-  };
-
-  const renderIcon = () => {
-    if (!answer) return null;
-    if (!selectedOption)
-      return <div className="w-4 h-4 rounded-full border-2 border-slate-500" />;
-    if (selectedOption === answer)
-      return <CheckIcon className="text-green-500" width={20} />;
-    return <XMarkIcon className="text-red-500" width={20} />;
+  const handleSubmit = () => {
+    onSubmit(selectedUsers, () => setSelectedUsers([]));
   };
 
   return (
-    <div className="flex items-center rounded-md">
-      <button className="hover:bg-blue-500/20 flex justify-center items-center min-w-10 px-2 transition-colors rounded place-self-stretch">
-        {number}
-      </button>
-      <div className="flex gap-1 p-2 pl-0">
-        {Array(4)
-          .fill(0)
-          .map((_, i) => renderOptionButton(i))}
+    <Dialog
+      header="افزودن کاربران زیرمجموعه"
+      visible={isShow}
+      onHide={() => setIsShow(false)}
+      style={{ width: "50vw" }}
+      breakpoints={{ "960px": "75vw", "641px": "90vw" }}
+    >
+      <div className="flex flex-col gap-4">
+        {users.map((user) => (
+          <div key={user._id} className="flex items-center gap-3">
+            <Checkbox
+              inputId={user._id}
+              checked={selectedUsers.some((u) => u._id === user._id)}
+              onChange={(e) => {
+                if (e.checked) {
+                  setSelectedUsers([...selectedUsers, user]);
+                } else {
+                  setSelectedUsers(
+                    selectedUsers.filter((u) => u._id !== user._id)
+                  );
+                }
+              }}
+            />
+            <label htmlFor={user._id} className="cursor-pointer">
+              {user.name}
+            </label>
+          </div>
+        ))}
+        <Button
+          label="تایید"
+          onClick={handleSubmit}
+          className="p-button-success"
+        />
       </div>
-      <div>{renderIcon()}</div>
-      <div className="px-2">{foramttMin(timeSpent)}</div>
-    </div>
+    </Dialog>
   );
 };
 
-export default TestResultQuestionRow;
+export default UserSelectionPopup;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /components/master/SingleAdminManage.tsx
+ :"use client";
+import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { IUser } from "@/models/User";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { InputText } from "primereact/inputtext";
+import { Toast } from "primereact/toast";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { Button } from "primereact/button";
+import {
+  ExclamationCircleIcon,
+  TrashIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
+import mongoose from "mongoose";
+import { Loader } from "@/components/Loader";
+import UserSelectionPopup from "@/components/layout/UserSelectionPopup";
+
+interface Props {
+  adminId: mongoose.Types.ObjectId;
+}
+
+const SingleAdminManage = ({ adminId }: Props) => {
+  const { data: session } = useSession();
+  const [adminUsers, setAdminUsers] = useState<IUser[]>([]);
+  const [otherUsers, setOtherUsers] = useState<IUser[]>([]);
+  const [globalFilter, setGlobalFilter] = useState<string>("");
+  const [isAddUserModalVisible, setIsAddUserModalVisible] = useState(false);
+  const toast = useRef<Toast>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/admin/users");
+      if (!res.ok) throw new Error("Failed to fetch users");
+      const data = await res.json();
+      setOtherUsers(
+        data.filter((user: IUser) => !user.managedBy?.includes(adminId))
+      );
+      setAdminUsers(
+        data.filter((user: IUser) => user.managedBy?.includes(adminId))
+      );
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      setOtherUsers([]);
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (session?.user?.roles?.includes("master")) {
+      fetchUsers();
+    }
+  }, [session]);
+
+  const showToast = (severity: "success" | "error", message: string) => {
+    toast.current?.show({
+      severity,
+      summary: severity === "success" ? "Success" : "Error",
+      detail: message,
+    });
+  };
+
+  const handleAddSubUsers = async (
+    selectedUsers: IUser[],
+    callback?: () => void
+  ) => {
+    try {
+      const res = await fetch("/api/admin/hierarchy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "add-sub-users",
+          adminId,
+          userIds: selectedUsers.map((u) => u._id),
+        }),
+      });
+
+      if (res.ok) {
+        showToast("success", "کاربران با موفقیت اضافه شدند");
+        fetchUsers();
+        setIsAddUserModalVisible(false);
+        callback?.();
+      } else {
+        showToast("error", "خطا در افزودن کاربران");
+      }
+    } catch (error) {
+      showToast("error", "خطا در ارتباط با سرور");
+    }
+  };
+
+  const handleRemoveFromSubset = async (user: IUser) => {
+    confirmDialog({
+      header: "حذف کاربر از زیرمجموعه",
+      message: (
+        <div className="flex items-center">
+          <ExclamationCircleIcon className="text-2xl mx-2 text-red-500" />
+          <h3>
+            آیا مطمئن هستید که می‌خواهید کاربر{" "}
+            <span className="text-primary">{user.name}</span> را از زیرمجموعه
+            حذف کنید؟
+          </h3>
+        </div>
+      ),
+      accept: async () => {
+        try {
+          const res = await fetch(`/api/admin/hierarchy`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "remove-from-subset",
+              adminId,
+              userId: user._id,
+            }),
+          });
+
+          if (res.ok) {
+            showToast("success", "کاربر با موفقیت از زیرمجموعه حذف شد");
+            fetchUsers();
+          } else {
+            showToast("error", "خطا در حذف کاربر از زیرمجموعه");
+          }
+        } catch (error) {
+          showToast("error", "خطا در ارتباط با سرور");
+        }
+      },
+      acceptLabel: "آره، حذفش کن",
+      rejectLabel: "بی خیال",
+    });
+  };
+
+  if (isLoading) return <Loader />;
+
+  return (
+    <>
+      <section className="bg-white rounded-md shadow-md p-5">
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <InputText
+              placeholder="جستجو..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="w-64"
+            />
+            <Button
+              icon={<PlusIcon className="h-5 w-5" />}
+              label="افزودن کاربر"
+              onClick={() => setIsAddUserModalVisible(true)}
+              className="p-button-success"
+            />
+          </div>
+          <DataTable
+            value={adminUsers}
+            editMode="row"
+            dataKey="_id"
+            tableStyle={{ minWidth: "15rem" }}
+            className="w-full border rounded-md overflow-hidden"
+            paginator
+            rows={10}
+            rowsPerPageOptions={[5, 10, 25]}
+          >
+            <Column field="name" header="نام" />
+            <Column field="username" header="نام کاربری" />
+            <Column
+              header="عملیات"
+              body={(rowData: IUser) => (
+                <div className="flex items-center gap-2">
+                  <Button
+                    icon={<TrashIcon className="h-4 w-4 text-red-500" />}
+                    className="p-button-text p-button-danger"
+                    onClick={() => handleRemoveFromSubset(rowData)}
+                  />
+                </div>
+              )}
+            />
+          </DataTable>
+        </div>
+      </section>
+
+      <UserSelectionPopup
+        isShow={isAddUserModalVisible}
+        setIsShow={setIsAddUserModalVisible}
+        users={otherUsers}
+        onSubmit={handleAddSubUsers}
+      />
+
+      <Toast ref={toast} />
+      <ConfirmDialog />
+    </>
+  );
+};
+
+export default SingleAdminManage;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2458,60 +3949,60 @@ import {
 } from "@heroicons/react/24/outline";
 import Timer from "@/components/Timer";
 import QuestionNavigation from "@/components/QuestionNavigation";
-import { IQuestion } from "@/models/Test";
+import { IQuestion } from "@/models/Exam";
 import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
 import AddAnswerQuestionRow from "../layout/AddAnswerQuestionRow";
-import TestResultQuestionRow from "../layout/TestResultQuestionRow";
-import { Question, Test } from "@/types/testTypes";
+import ExamResultQuestionRow from "../layout/ExamResultQuestionRow";
+import { Question, Exam } from "@/types/examTypes";
 import { countAnswers } from "@/utils/funcs";
 
 interface Props {
-  testID: string;
+  examID: string;
 }
 
-const AddAnwersPage: FC<Props> = ({ testID }) => {
-  const [test, setTest] = useState<Test>();
+const AddAnwersPage: FC<Props> = ({  examID }) => {
+  const [exam, setExam] = useState<Exam>();
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchTest = async () => {
-      const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
-      setTest(data);
+    const fetchExam = async () => {
+      const { data }: { data: Exam } = await axios.get(`/api/exams/${examID}`);
+      setExam(data);
     };
 
-    fetchTest();
-  }, [testID]);
+    fetchExam();
+  }, [examID]);
 
-  const updateTest = async (newData?: Test) => {
+  const updateExam = async (newData?: Exam) => {
     setIsFetchingData(true);
-    const res = await axios.put(`/api/tests/${testID}`, newData || test);
+    const res = await axios.put(`/api/exams/${examID}`, newData || exam);
     if (res.status === 201) setIsFetchingData(false);
   };
 
-  if (!test) return <Loader />;
+  if (!exam) return <Loader />;
 
-  const handleEndTest = async () => {
-    const res = await axios.put(`/api/tests/${testID}`, {
+  const handleEndExam = async () => {
+    const res = await axios.put(`/api/exams/${examID}`, {
       endTime: new Date(),
-      questions: test.questions,
+      questions: exam.questions,
     });
 
-    if (res.status === 201) router.push("/tests");
+    if (res.status === 201) router.push("/exams");
   };
 
   const onChoose = (number: number, answer: number) => {
-    const newTest = {
-      ...test,
-      questions: test.questions?.map((q: Question) =>
+    const newExam = {
+      ...exam,
+      questions: exam.questions?.map((q: Question) =>
         q.number === number ? { ...q, answer } : q
       ),
     };
-    setTest(newTest);
-    updateTest(newTest);
+    setExam(newExam);
+    updateExam(newExam);
   };
 
   return (
@@ -2555,10 +4046,10 @@ const AddAnwersPage: FC<Props> = ({ testID }) => {
 
         {/* Questions Container */}
         <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
-          {Array(Math.ceil(test.questions?.length / 10 || 0))
+          {Array(Math.ceil(exam.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => {
-              const questions = test.questions.slice(10 * i, 10 * i + 10);
+              const questions = exam.questions.slice(10 * i, 10 * i + 10);
               const { correct, incorrect, unanswered } =
                 countAnswers(questions);
 
@@ -2619,43 +4110,43 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Loader } from "../Loader";
-import TestResultQuestionRow from "../layout/TestResultQuestionRow";
+import ExamResultQuestionRow from "../layout/ExamResultQuestionRow";
 import { countAnswers } from "@/utils/funcs";
-import { Question, Test } from "@/types/testTypes";
+import { Question, Exam } from "@/types/examTypes";
 
 interface Props {
-  testID: string;
+  examID: string;
 }
 
-const ResultPage: FC<Props> = ({ testID }) => {
-  const [test, setTest] = useState<Test>();
+const ResultPage: FC<Props> = ({ examID }) => {
+  const [exam, setExam] = useState<Exam>();
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchTest = async () => {
-      const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
-      setTest(data);
+    const fetchExam = async () => {
+      const { data }: { data: Exam } = await axios.get(`/api/exams/${examID}`);
+      setExam(data);
     };
 
-    fetchTest();
-  }, [testID]);
+    fetchExam();
+  }, [examID]);
 
-  const updateTest = async (newData?: Test) => {
+  const updateExam = async (newData?: Exam) => {
     setIsFetchingData(true);
-    const res = await axios.put(`/api/tests/${testID}`, newData || test);
+    const res = await axios.put(`/api/exams/${examID}`, newData || exam);
     if (res.status === 201) setIsFetchingData(false);
   };
 
-  if (!test) return <Loader />;
+  if (!exam) return <Loader />;
 
-  const handleEndTest = async () => {
-    const res = await axios.put(`/api/tests/${testID}`, {
+  const handleEndExam = async () => {
+    const res = await axios.put(`/api/exams/${examID}`, {
       endTime: new Date(),
-      questions: test.questions,
+      questions: exam.questions,
     });
 
-    if (res.status === 201) router.push("/tests");
+    if (res.status === 201) router.push("/exams");
   };
 
 
@@ -2700,10 +4191,10 @@ const ResultPage: FC<Props> = ({ testID }) => {
 
         {/* Questions Container */}
         <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
-          {Array(Math.ceil(test.questions?.length / 10 || 0))
+          {Array(Math.ceil(exam.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => {
-              const questions = test.questions.slice(10 * i, 10 * i + 10);
+              const questions = exam.questions.slice(10 * i, 10 * i + 10);
               const { correct, incorrect, unanswered } =
                 countAnswers(questions);
               return (
@@ -2728,11 +4219,11 @@ const ResultPage: FC<Props> = ({ testID }) => {
                   </div>
                   {/* Questions List */}
                   <div className="flex flex-col p-4 space-y-3">
-                    {test.questions
+                    {exam.questions
                       .slice(10 * i, 10 * i + 10)
                       .map((question, j) => (
                         <div key={`${i}-${j}`}>
-                          <TestResultQuestionRow question={question} />
+                          <ExamResultQuestionRow question={question} />
                         </div>
                       ))}
                   </div>
@@ -2749,7 +4240,7 @@ export default ResultPage;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-the codes of file with route : /components/templates/SingleTestPage.tsx
+the codes of file with route : /components/templates/SingleExamPage.tsx
  :"use client";
 import { useState, useEffect, useCallback, FC } from "react";
 import { useRouter } from "next/navigation";
@@ -2762,7 +4253,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Timer from "@/components/Timer";
 import QuestionNavigation from "@/components/QuestionNavigation";
-import { IQuestion } from "@/models/Test";
+import { IQuestion } from "@/models/Exam";
 import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
@@ -2775,69 +4266,69 @@ interface Question {
 }
 
 interface Props {
-  testID: string;
+  examID: string;
 }
 
-type Test = {
+type Exam = {
   startTime: Date;
   endTime: Date;
   questions: IQuestion[];
   id: string;
 };
 
-const SingleTestPage: FC<Props> = ({ testID }) => {
-  const [test, setTest] = useState<Test>();
+const SingleExamPage: FC<Props> = ({  examID }) => {
+  const [exam, setExam] = useState<Exam>();
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchTest = async () => {
-      const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
-      setTest(data);
+    const fetchExam = async () => {
+      const { data }: { data: Exam } = await axios.get(`/api/exams/${examID}`);
+      setExam(data);
     };
 
-    fetchTest();
-  }, [testID]);
+    fetchExam();
+  }, [examID]);
 
-  const updateTest = async (newData?: Test) => {
+  const updateExam = async (newData?: Exam) => {
     setIsFetchingData(true);
-    const res = await axios.put(`/api/tests/${testID}`, newData || test);
+    const res = await axios.put(`/api/exams/${examID}`, newData || exam);
     if (res.status === 201) setIsFetchingData(false);
   };
 
-  if (!test) return <Loader />;
+  if (!exam) return <Loader />;
 
-  const handleEndTest = async () => {
-    const res = await axios.put(`/api/tests/${testID}`, {
+  const handleEndExam = async () => {
+    const res = await axios.put(`/api/exams/${examID}`, {
       endTime: new Date(),
-      questions: test.questions,
+      questions: exam.questions,
     });
 
-    if (res.status === 201) router.push("/tests");
+    if (res.status === 201) router.push("/exams");
   };
 
   const onPause = (number: number, addingTime: number) => {
-    const newTest = {
-      ...test,
-      questions: test.questions?.map((q: IQuestion) =>
+    const newExam = {
+      ...exam,
+      questions: exam.questions?.map((q: IQuestion) =>
         q.number === number ? { ...q, timeSpent: addingTime } : q
       ),
     };
-    setTest(newTest);
-    updateTest(newTest);
+    setExam(newExam);
+    updateExam(newExam);
   };
 
   const onChoose = (number: number, optionNumber: number) => {
-    const newTest = {
-      ...test,
-      questions: test.questions?.map((q: IQuestion) =>
+    const newExam = {
+      ...exam,
+      questions: exam.questions?.map((q: IQuestion) =>
         q.number === number ? { ...q, selectedOption: optionNumber } : q
       ),
     };
-    setTest(newTest);
-    updateTest(newTest);
+    setExam(newExam);
+    updateExam(newExam);
   };
 
   return (
@@ -2849,14 +4340,14 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
         {/* Header */}
         <div className="hidden xs:flex items-center justify-between p-8 h-20 bg-white dark:bg-gray-800 shadow-sm">
           <button
-            onClick={() => router.push("/tests")}
+            onClick={() => router.push("/exams")}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
           >
             <ArrowLeftIcon className="w-5 h-5" />
             بازگشت
           </button>
 
-          <Timer startTime={test.startTime} endTime={test.endTime} />
+          <Timer startTime={exam.startTime} endTime={exam.endTime} />
 
           <div className="flex items-center justify-center">
             <div role="status" className={!isFetchingData ? "invisible" : ""}>
@@ -2889,7 +4380,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
 
         {/* Questions Container */}
         <div className="flex pb-32 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
-          {Array(Math.ceil(test.questions?.length / 10 || 0))
+          {Array(Math.ceil(exam.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => (
               <div
@@ -2908,7 +4399,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
 
                 {/* Questions List */}
                 <div className="flex flex-col p-4 space-y-3">
-                  {test.questions
+                  {exam.questions
                     .slice(10 * i, 10 * i + 10)
                     .map((question, j) => (
                       <div key={`${i}-${j}`}>
@@ -2930,7 +4421,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
       <ConfirmModal
         open={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        onConfirm={handleEndTest}
+        onConfirm={handleEndExam}
         title="پایان آزمون"
         description="آیا مطمئن هستید که می‌خواهید این آزمون را پایان کنید؟ این عمل برگشت‌ناپذیر است."
       />
@@ -2938,7 +4429,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
   );
 };
 
-export default SingleTestPage;
+export default SingleExamPage;
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2947,7 +4438,7 @@ the codes of file with route : /constants/homePageConsts.tsx
   {
     title: "مدیریت آزمون‌ها",
     desc: "ایجاد، ویرایش و مدیریت آزمون‌ها به سادگی و با رابط کاربری آسان.",
-    icon: "📝", // ایموجی یا آیکون مربوطه
+    icon: "📝",
   },
   {
     title: "تحلیل نتایج",
@@ -2998,19 +4489,115 @@ export default connectDB
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /middleware/auth.ts
- :import { NextResponse } from "next/server";
+ :import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { NextApiRequest } from "next";
+import User from "@/models/User";
 
-export async function middleware(req: NextApiRequest) {
-  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+const hierarchy = {
+  master: 4,
+  admin: 3,
+  assistant: 2,
+  user: 1,
+};
 
-  if (!session?.user?.roles?.includes("admin")) {
-    return NextResponse.redirect(new URL("/403", req.url));
+export async function middleware(req: NextRequest) {
+  const session = await getToken({ req });
+  const path = req.nextUrl.pathname;
+
+  if (path.startsWith("/admin/master")) {
+    if (!session?.user?.roles?.includes("master")) {
+      return NextResponse.redirect(new URL("/403", req.url));
+    }
   }
 
-  return NextResponse.next();
+  if (path.startsWith("/admin")) {
+    if (!session?.user?.roles?.some((r) => ["master", "admin"].includes(r))) {
+      return NextResponse.redirect(new URL("/403", req.url));
+    }
+  }
+
+  if (session?.user?.roles?.includes("admin")) {
+    const targetUserId = req.nextUrl.searchParams.get("userId");
+    if (targetUserId) {
+      const isAuthorized = await checkUserHierarchy(
+        session.user._id,
+        targetUserId
+      );
+      if (!isAuthorized) {
+        return NextResponse.redirect(new URL("/403", req.url));
+      }
+    }
+  }
 }
+
+async function checkUserHierarchy(adminId: string, targetUserId: string) {
+  const user = await User.findById(targetUserId)
+    .populate('managedBy');
+  
+  return user.managedBy?._id.toString() === adminId;
+}
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /models/Exam.ts
+ :import mongoose, { Document, Schema } from "mongoose";
+
+export interface IQuestion {
+  number: number;
+  selectedOption?: number;
+  timeSpent: number;
+  answer: number;
+}
+
+export interface IExam extends Document {
+  _id: string;
+  title: string;
+  startQuestion: number;
+  endQuestion: number;
+  questions: IQuestion[];
+  startTime: Date;
+  endTime?: Date;
+  notes: string;
+  userId: string;
+  viewed: boolean;
+}
+
+export interface IntermediateExam {
+  _id: string;
+  title: string;
+  startQuestion: number;
+  endQuestion: number;
+  questions: IQuestion[];
+  startTime: Date;
+  endTime?: Date;
+  notes: string;
+  userId: string;
+  viewed: boolean;
+}
+
+const ExamSchema = new Schema<IExam>({
+  title: { type: String, required: true },
+  startQuestion: { type: Number, required: true },
+  endQuestion: { type: Number, required: true },
+  questions: [
+    {
+      number: Number,
+      selectedOption: Number,
+      answer: Number,
+      timeSpent: { type: Number, default: 0 },
+    },
+  ],
+  startTime: { type: Date, default: Date.now },
+  endTime: Date,
+  notes: String,
+  userId: { type: String, required: true },
+  viewed: { type: Boolean, default: false },
+});
+
+export default mongoose.models.Exam ||
+  mongoose.model<IExam>("Exam", ExamSchema);
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /models/PageAccess.ts
@@ -3034,68 +4621,9 @@ const PageAccessSchema = new Schema<IPageAccess>({
 export default mongoose.models.PageAccess || mongoose.model<IPageAccess>('PageAccess', PageAccessSchema);
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-the codes of file with route : /models/Test.ts
- :// models/Test.ts
-import mongoose, { Document, Schema } from "mongoose";
-
-export interface IQuestion {
-  number: number;
-  selectedOption?: number;
-  timeSpent: number;
-  answer: number;
-}
-
-export interface ITest extends Document {
-  title: string;
-  startQuestion: number;
-  endQuestion: number;
-  questions: IQuestion[];
-  startTime: Date;
-  endTime?: Date;
-  notes: string;
-  userId: string;
-  viewed: boolean; // اضافه کردن فیلد viewed
-}
-
-export interface IntermediateTest {
-  _id: string;
-  title: string;
-  startQuestion: number;
-  endQuestion: number;
-  questions: IQuestion[];
-  startTime: Date;
-  endTime?: Date;
-  notes: string;
-  userId: string;
-  viewed: boolean;
-}
-
-const TestSchema = new Schema<ITest>({
-  title: { type: String, required: true },
-  startQuestion: { type: Number, required: true },
-  endQuestion: { type: Number, required: true },
-  questions: [
-    {
-      number: Number,
-      selectedOption: Number,
-      answer: Number,
-      timeSpent: { type: Number, default: 0 },
-    },
-  ],
-  startTime: { type: Date, default: Date.now },
-  endTime: Date,
-  notes: String,
-  userId: { type: String, required: true },
-  viewed: { type: Boolean, default: false }, // اضافه کردن فیلد viewed
-});
-
-export default mongoose.models.Test ||
-  mongoose.model<ITest>("Test", TestSchema);
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 the codes of file with route : /models/User.ts
- :import mongoose, { Document, Schema } from 'mongoose';
+ :import mongoose, { Document, Schema } from "mongoose";
+import bcrypt from "bcrypt";
 
 export interface IUser extends Document {
   _id: string;
@@ -3104,6 +4632,8 @@ export interface IUser extends Document {
   password: string;
   roles: string[];
   permissions: string[];
+  managedUsers?: mongoose.Types.ObjectId[];
+  managedBy?: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -3113,18 +4643,53 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    roles: { type: [String], default: ['user'] },
+    roles: { type: [String], default: ["user"] },
     permissions: { type: [String], default: [] },
+    managedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    managedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
 
-export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+UserSchema.pre<IUser>("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+UserSchema.methods.comparePassword = async function (
+  candidatePassword: string
+) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+export default mongoose.models.User ||
+  mongoose.model<IUser>("User", UserSchema);
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+the codes of file with route : /types/examTypes.ts
+ :import { IQuestion } from "@/models/Exam";
+
+export interface Question {
+  number: number;
+  selectedOption?: number;
+  answer: number;
+  timeSpent: number;
+}
+export type Exam = {
+  startTime: Date;
+  endTime: Date;
+  questions: IQuestion[];
+  id: string;
+};
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /types/next-auth.d.ts.ts
- :// types/next-auth.d.ts
-import "next-auth";
+ :import "next-auth";
 import "next-auth/jwt";
 
 declare module "next-auth" {
@@ -3133,8 +4698,11 @@ declare module "next-auth" {
     _id: string;
     name?: string | null;
     username?: string | null;
-    roles?: string[]; // اضافه کردن فیلد roles
-    permissions?: string[]; // اضافه کردن فیلد permissions
+    roles: string[];
+    permissions: string[];
+    managedUsers?: string[];
+    managedBy?: string;
+    maxPermissions?: string[];
   }
 
   interface Session {
@@ -3143,8 +4711,11 @@ declare module "next-auth" {
       _id: string;
       name?: string | null;
       username?: string | null;
-      roles?: string[]; // اضافه کردن فیلد roles
-      permissions?: string[]; // اضافه کردن فیلد permissions
+      roles: string[];
+      permissions: string[];
+      managedUsers?: string[];
+      managedBy?: string;
+      maxPermissions?: string[];
     };
   }
 }
@@ -3156,33 +4727,19 @@ declare module "next-auth/jwt" {
       _id: string;
       name?: string | null;
       username?: string | null;
-      roles?: string[]; // اضافه کردن فیلد roles
-      permissions?: string[]; // اضافه کردن فیلد permissions
+      roles: string[];
+      permissions: string[];
+      managedUsers?: string[];
+      managedBy?: string;
+      maxPermissions?: string[];
     };
   }
 }
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-the codes of file with route : /types/testTypes.ts
- :import { IQuestion } from "@/models/Test";
-
-export interface Question {
-  number: number;
-  selectedOption?: number;
-  answer: number;
-  timeSpent: number;
-}
-export type Test = {
-  startTime: Date;
-  endTime: Date;
-  questions: IQuestion[];
-  id: string;
-};
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 the codes of file with route : /utils/funcs.ts
- :import { Question } from "@/types/testTypes";
+ :import { Question } from "@/types/examTypes";
 
 export const foramttMin = (seconds: number) =>
   `${Math.floor(seconds / 60)
@@ -3206,5 +4763,8 @@ export const countAnswers = (questions: Question[]) => {
 
   return { correct, incorrect, unanswered };
 };
+
+export const formatDate = (date: Date) =>
+  new Date(date).toLocaleDateString("fa-IR");
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

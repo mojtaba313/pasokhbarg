@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowLeftStartOnRectangleIcon,
   Cog6ToothIcon,
   CursorArrowRaysIcon,
   CursorArrowRippleIcon,
@@ -11,6 +12,7 @@ import {
 import React, { useState, useEffect } from "react";
 import AnimatedCursor from "react-animated-cursor";
 import KeyBoard from "../KeyBoard";
+import { signOut } from "next-auth/react";
 
 const Settings = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -82,7 +84,7 @@ const Settings = () => {
 
       {/* پنل تنظیمات */}
       <div
-        className={`fixed z-30 bottom-20 left-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg p-4 space-y-4 transition-all duration-300 ${
+        className={`fixed z-50 bottom-20 left-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg p-4 space-y-4 transition-all duration-300 ${
           isOpen
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-4 pointer-events-none"
@@ -130,6 +132,17 @@ const Settings = () => {
                 ? "text-gray-800 dark:text-gray-200"
                 : "text-yellow-400"
             }`}
+          />
+        </button>
+
+        {/* logout */}
+        <button
+          className="flex items-center justify-center w-12 h-12 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors !bg-red-500 text-white hover:!bg-red-600 shadow-lg hover:shadow-red-500/50"
+          onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+          aria-label="Toggle dark mode"
+        >
+          <ArrowLeftStartOnRectangleIcon
+            width={24}
           />
         </button>
       </div>

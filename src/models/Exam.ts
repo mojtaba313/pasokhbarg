@@ -8,6 +8,7 @@ export interface IQuestion {
 }
 
 export interface IExam extends Document {
+  _id: string;
   title: string;
   startQuestion: number;
   endQuestion: number;

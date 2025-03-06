@@ -1,11 +1,23 @@
-@layer tailwind-base, primereact, tailwind-utilities;
-
-@import "primereact/resources/themes/lara-light-blue/theme.css"
-  layer(primereact);
+@import "primereact/resources/themes/lara-dark-blue/theme.css" layer(primereact);
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer tailwind-base, primereact, tailwind-utilities;
+
+/* IMPORTANT: In "styled" mode you must add the PrimeReact Theme here. Do NOT include in "unstyled" mode */
+@import "primereact/resources/themes/lara-light-blue/theme.css"
+  layer(primereact);
+
+@layer tailwind-base {
+  @tailwind base;
+}
+
+@layer tailwind-utilities {
+  @tailwind components;
+  @tailwind utilities;
+}
 
 /* styles/fonts.css */
 @font-face {
@@ -27,14 +39,108 @@
 }
 
 body {
-  @apply bg-gray-100 dark:bg-slate-900 dark:text-white;
+  @apply text-slate-950 dark:text-white;
   cursor: url("../../public/svg/pen.svg"), auto;
 }
 
+button {
+  @apply px-2 py-1 rounded;
+}
+
 .glass {
-  @apply isolate rounded-xl bg-slate-900/40 shadow-lg ring-1 ring-black/5;
+  @apply isolate rounded-xl bg-slate-900/40 shadow-lg ring-1 ring-black/5 backdrop-blur-3xl;
 }
 
 .default-cursor {
   @apply !cursor-default *:!cursor-default;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.p-tag.p-tag-success {
+  background: #059669 !important;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(5px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.p-dialog,
+.p-component,
+.p-dialog-default,
+.p-ripple-disabled,
+.p-dialog-enter-done {
+  @apply dark:!bg-slate-800/80 !bg-white/50;
+  > * {
+    background: transparent !important;
+  }
+}
+
+.blob-container {
+  @apply -z-10 fixed inset-0 w-screen min-h-screen overflow-hidden bg-gray-200 dark:bg-slate-900;
+}
+
+.blob {
+  @apply absolute aspect-square opacity-70 blur-2xl;
+  border-radius: 40% 50% 30% 40%;
+}
+.blob-one {
+  @apply bg-blue-400 w-96 left-[65%] top-[20%];
+  animation: movement 24s ease-in-out infinite both,
+    transform-blob 14s ease-in-out infinite both alternate;
+}
+.blob-two {
+  @apply bg-purple-800 w-72 left-1/4 top-[10%];
+  animation: movement 32s ease-in-out infinite both,
+    transform-blob 12s ease-in-out infinite both alternate;
+}
+.blob-three {
+  @apply bg-violet-950 w-64 left-[42%] bottom-1/4;
+  animation: movement 16s ease-in-out infinite both,
+    transform-blob 10s ease-in-out infinite both alternate;
+}
+
+@keyframes transform-blob {
+  100% {
+    border-radius: 33% 67% 70% 30% / 30% 40% 70% 70%;
+  }
+  20% {
+    border-radius: 37% 63% 51% 49% / 37% 35% 35% 63%;
+  }
+  40% {
+    border-radius: 36% 64% 64% 36% / 64% 48% 52% 26%;
+  }
+  60% {
+    border-radius: 37% 63% 51% 49% / 30% 30% 70% 73%;
+  }
+  80% {
+    border-radius: 40% 60% 42% 58% / 51% 51% 49% 59%;
+  }
+}
+
+@keyframes movement {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translate(-50%, 10%) rotateY(10deg) scale(0.7);
+  }
+  50% {
+    transform: translate(-40%, 50%) rotateY(10deg) scale(1.3);
+  }
+  75% {
+    transform: translate(10%, 50%) rotateY(10deg) scale(0.8);
+  }
 }

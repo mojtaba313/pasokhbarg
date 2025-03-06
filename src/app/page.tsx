@@ -5,9 +5,9 @@ import Link from "next/link";
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900">
-      <div className=" [background-image:url('/hero.png')] bg-no-repeat bg-cover bg-center">
-        <div className="backdrop-blur-3xl">
+    <div className="min-h-screen">
+      <div className=" [background-image:url('/hero.png') bg-no-repeat bg-cover bg-center">
+        <div className="backdrop-blur-3x">
           <div className="max-w-7xl mx-auto py-16 px-5">
             <motion.div
               initial={{ y: 20, opacity: 0 }}

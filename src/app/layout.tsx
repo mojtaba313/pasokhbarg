@@ -3,6 +3,7 @@ import "./globals.css";
 import Settings from "../components/layout/Settings";
 import Providers from "./Provider";
 import Navbar from "@/components/layout/Navbar";
+import "primereact/resources/themes/lara-dark-blue/theme.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 
 export const metadata: Metadata = {
@@ -19,34 +20,16 @@ export default function RootLayout({
     <html lang="fa" dir="rtl">
       <body className={`antialiased`}>
         <Providers>
-          {children}
-          <Navbar />
-          <Settings />
-          {/* <AnimatedCursor
-            innerSize={70}
-            outerSize={0}
-            innerScale={1.2}
-            innerStyle={{
-              opacity: 0.2,
-              background:
-                "radial-gradient(circle, rgba(2,0,36,0.5018382352941176) 0%, rgba(9,22,121,1) 49%, rgba(115,0,255,1) 74%, rgba(124,2,219,0.3253676470588235) 86%, rgba(176,13,13,0.26934523809523814) 100%)",
-            }}
-            outerScale={5}
-            clickables={[
-              "a",
-              'input[type="text"]',
-              'input[type="email"]',
-              'input[type="number"]',
-              'input[type="submit"]',
-              'input[type="image"]',
-              "label[for]",
-              "select",
-              "textarea",
-              "button",
-              ".link",
-            ]}
-            showSystemCursor
-          /> */}
+          <div className="w-full h-full z-10">
+            {children}
+            <Navbar />
+            <Settings />
+          </div>
+          <div className="blob-container">
+            <div className="blob blob-one"></div>
+            <div className="blob blob-two"></div>
+            <div className="blob blob-three"></div>
+          </div>
         </Providers>
       </body>
     </html>
