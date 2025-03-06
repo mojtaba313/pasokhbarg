@@ -120,7 +120,7 @@ const SingleAdminManage = ({ adminId }: Props) => {
 
           if (res.ok) {
             showToast("success", "کاربر با موفقیت از زیرمجموعه حذف شد");
-            fetchUsers(); // بارگذاری مجدد لیست کاربران زیرمجموعه
+            fetchUsers();
           } else {
             showToast("error", "خطا در حذف کاربر از زیرمجموعه");
           }

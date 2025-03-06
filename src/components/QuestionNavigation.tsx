@@ -24,7 +24,6 @@ export default function QuestionNavigation({
   const itemsPerPage = 10
   const totalPages = Math.ceil(questions?.length / itemsPerPage)
 
-  // پیکربندی برای نمایش دسکتاپ
   const DesktopView = () => (
     <div className="hidden md:block w-64">
       <div className="grid grid-cols-5 gap-2">
@@ -49,7 +48,6 @@ export default function QuestionNavigation({
     </div>
   )
 
-  // پیکربندی برای نمایش موبایل
   const MobilePagination = () => (
     <div className="md:hidden">
       <div className="flex justify-between items-center mb-4">

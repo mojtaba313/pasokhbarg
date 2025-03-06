@@ -1,4 +1,3 @@
-// models/Test.ts
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IQuestion {
@@ -8,7 +7,7 @@ export interface IQuestion {
   answer: number;
 }
 
-export interface ITest extends Document {
+export interface IExam extends Document {
   title: string;
   startQuestion: number;
   endQuestion: number;
@@ -17,10 +16,10 @@ export interface ITest extends Document {
   endTime?: Date;
   notes: string;
   userId: string;
-  viewed: boolean; // اضافه کردن فیلد viewed
+  viewed: boolean;
 }
 
-export interface IntermediateTest {
+export interface IntermediateExam {
   _id: string;
   title: string;
   startQuestion: number;
@@ -33,7 +32,7 @@ export interface IntermediateTest {
   viewed: boolean;
 }
 
-const TestSchema = new Schema<ITest>({
+const ExamSchema = new Schema<IExam>({
   title: { type: String, required: true },
   startQuestion: { type: Number, required: true },
   endQuestion: { type: Number, required: true },
@@ -49,8 +48,8 @@ const TestSchema = new Schema<ITest>({
   endTime: Date,
   notes: String,
   userId: { type: String, required: true },
-  viewed: { type: Boolean, default: false }, // اضافه کردن فیلد viewed
+  viewed: { type: Boolean, default: false },
 });
 
-export default mongoose.models.Test ||
-  mongoose.model<ITest>("Test", TestSchema);
+export default mongoose.models.Exam ||
+  mongoose.model<IExam>("Exam", ExamSchema);

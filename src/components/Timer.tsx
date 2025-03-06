@@ -1,4 +1,3 @@
-// components/Timer.tsx
 'use client'
 
 import { ClockIcon } from '@heroicons/react/24/outline'

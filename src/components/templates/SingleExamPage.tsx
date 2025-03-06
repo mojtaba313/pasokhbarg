@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Timer from "@/components/Timer";
 import QuestionNavigation from "@/components/QuestionNavigation";
-import { IQuestion } from "@/models/Test";
+import { IQuestion } from "@/models/Exam";
 import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
@@ -23,69 +23,69 @@ interface Question {
 }
 
 interface Props {
-  testID: string;
+  examID: string;
 }
 
-type Test = {
+type Exam = {
   startTime: Date;
   endTime: Date;
   questions: IQuestion[];
   id: string;
 };
 
-const SingleTestPage: FC<Props> = ({ testID }) => {
-  const [test, setTest] = useState<Test>();
+const SingleExamPage: FC<Props> = ({  examID }) => {
+  const [exam, setExam] = useState<Exam>();
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchTest = async () => {
-      const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
-      setTest(data);
+    const fetchExam = async () => {
+      const { data }: { data: Exam } = await axios.get(`/api/exams/${examID}`);
+      setExam(data);
     };
 
-    fetchTest();
-  }, [testID]);
+    fetchExam();
+  }, [examID]);
 
-  const updateTest = async (newData?: Test) => {
+  const updateExam = async (newData?: Exam) => {
     setIsFetchingData(true);
-    const res = await axios.put(`/api/tests/${testID}`, newData || test);
+    const res = await axios.put(`/api/exams/${examID}`, newData || exam);
     if (res.status === 201) setIsFetchingData(false);
   };
 
-  if (!test) return <Loader />;
+  if (!exam) return <Loader />;
 
-  const handleEndTest = async () => {
-    const res = await axios.put(`/api/tests/${testID}`, {
+  const handleEndExam = async () => {
+    const res = await axios.put(`/api/exams/${examID}`, {
       endTime: new Date(),
-      questions: test.questions,
+      questions: exam.questions,
     });
 
-    if (res.status === 201) router.push("/tests");
+    if (res.status === 201) router.push("/exams");
   };
 
   const onPause = (number: number, addingTime: number) => {
-    const newTest = {
-      ...test,
-      questions: test.questions?.map((q: IQuestion) =>
+    const newExam = {
+      ...exam,
+      questions: exam.questions?.map((q: IQuestion) =>
         q.number === number ? { ...q, timeSpent: addingTime } : q
       ),
     };
-    setTest(newTest);
-    updateTest(newTest);
+    setExam(newExam);
+    updateExam(newExam);
   };
 
   const onChoose = (number: number, optionNumber: number) => {
-    const newTest = {
-      ...test,
-      questions: test.questions?.map((q: IQuestion) =>
+    const newExam = {
+      ...exam,
+      questions: exam.questions?.map((q: IQuestion) =>
         q.number === number ? { ...q, selectedOption: optionNumber } : q
       ),
     };
-    setTest(newTest);
-    updateTest(newTest);
+    setExam(newExam);
+    updateExam(newExam);
   };
 
   return (
@@ -97,14 +97,14 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
         {/* Header */}
         <div className="hidden xs:flex items-center justify-between p-8 h-20 bg-white dark:bg-gray-800 shadow-sm">
           <button
-            onClick={() => router.push("/tests")}
+            onClick={() => router.push("/exams")}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
           >
             <ArrowLeftIcon className="w-5 h-5" />
             بازگشت
           </button>
 
-          <Timer startTime={test.startTime} endTime={test.endTime} />
+          <Timer startTime={exam.startTime} endTime={exam.endTime} />
 
           <div className="flex items-center justify-center">
             <div role="status" className={!isFetchingData ? "invisible" : ""}>
@@ -137,7 +137,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
 
         {/* Questions Container */}
         <div className="flex pb-32 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
-          {Array(Math.ceil(test.questions?.length / 10 || 0))
+          {Array(Math.ceil(exam.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => (
               <div
@@ -156,7 +156,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
 
                 {/* Questions List */}
                 <div className="flex flex-col p-4 space-y-3">
-                  {test.questions
+                  {exam.questions
                     .slice(10 * i, 10 * i + 10)
                     .map((question, j) => (
                       <div key={`${i}-${j}`}>
@@ -178,7 +178,7 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
       <ConfirmModal
         open={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        onConfirm={handleEndTest}
+        onConfirm={handleEndExam}
         title="پایان آزمون"
         description="آیا مطمئن هستید که می‌خواهید این آزمون را پایان کنید؟ این عمل برگشت‌ناپذیر است."
       />
@@ -186,4 +186,4 @@ const SingleTestPage: FC<Props> = ({ testID }) => {
   );
 };
 
-export default SingleTestPage;
+export default SingleExamPage;

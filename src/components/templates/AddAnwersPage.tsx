@@ -12,60 +12,60 @@ import {
 } from "@heroicons/react/24/outline";
 import Timer from "@/components/Timer";
 import QuestionNavigation from "@/components/QuestionNavigation";
-import { IQuestion } from "@/models/Test";
+import { IQuestion } from "@/models/Exam";
 import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
 import AddAnswerQuestionRow from "../layout/AddAnswerQuestionRow";
-import TestResultQuestionRow from "../layout/TestResultQuestionRow";
-import { Question, Test } from "@/types/testTypes";
+import ExamResultQuestionRow from "../layout/ExamResultQuestionRow";
+import { Question, Exam } from "@/types/examTypes";
 import { countAnswers } from "@/utils/funcs";
 
 interface Props {
-  testID: string;
+  examID: string;
 }
 
-const AddAnwersPage: FC<Props> = ({ testID }) => {
-  const [test, setTest] = useState<Test>();
+const AddAnwersPage: FC<Props> = ({  examID }) => {
+  const [exam, setExam] = useState<Exam>();
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchTest = async () => {
-      const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
-      setTest(data);
+    const fetchExam = async () => {
+      const { data }: { data: Exam } = await axios.get(`/api/exams/${examID}`);
+      setExam(data);
     };
 
-    fetchTest();
-  }, [testID]);
+    fetchExam();
+  }, [examID]);
 
-  const updateTest = async (newData?: Test) => {
+  const updateExam = async (newData?: Exam) => {
     setIsFetchingData(true);
-    const res = await axios.put(`/api/tests/${testID}`, newData || test);
+    const res = await axios.put(`/api/exams/${examID}`, newData || exam);
     if (res.status === 201) setIsFetchingData(false);
   };
 
-  if (!test) return <Loader />;
+  if (!exam) return <Loader />;
 
-  const handleEndTest = async () => {
-    const res = await axios.put(`/api/tests/${testID}`, {
+  const handleEndExam = async () => {
+    const res = await axios.put(`/api/exams/${examID}`, {
       endTime: new Date(),
-      questions: test.questions,
+      questions: exam.questions,
     });
 
-    if (res.status === 201) router.push("/tests");
+    if (res.status === 201) router.push("/exams");
   };
 
   const onChoose = (number: number, answer: number) => {
-    const newTest = {
-      ...test,
-      questions: test.questions?.map((q: Question) =>
+    const newExam = {
+      ...exam,
+      questions: exam.questions?.map((q: Question) =>
         q.number === number ? { ...q, answer } : q
       ),
     };
-    setTest(newTest);
-    updateTest(newTest);
+    setExam(newExam);
+    updateExam(newExam);
   };
 
   return (
@@ -109,10 +109,10 @@ const AddAnwersPage: FC<Props> = ({ testID }) => {
 
         {/* Questions Container */}
         <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
-          {Array(Math.ceil(test.questions?.length / 10 || 0))
+          {Array(Math.ceil(exam.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => {
-              const questions = test.questions.slice(10 * i, 10 * i + 10);
+              const questions = exam.questions.slice(10 * i, 10 * i + 10);
               const { correct, incorrect, unanswered } =
                 countAnswers(questions);
 

@@ -1,5 +1,4 @@
-// app/provider.tsx
-"use client"; // این خط را اضافه کنید
+"use client";
 
 import { SessionProvider } from "next-auth/react";
 import { PrimeReactProvider } from "primereact/api";

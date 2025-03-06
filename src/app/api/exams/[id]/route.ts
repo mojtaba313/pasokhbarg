@@ -1,5 +1,5 @@
 import connectDB from "@/lib/mongodb";
-import Test from "@/models/Test";
+import Exam from "@/models/Exam";
 import { NextResponse } from "next/server";
 
 export const GET = async (
@@ -15,7 +15,7 @@ export const GET = async (
     if (!id) throw new Error();
 
     await connectDB();
-    const result = await Test.findById(id);
+    const result = await Exam.findById(id);
     return NextResponse.json(result);
   } catch (err) {
     console.log("error--->", err);
@@ -34,7 +34,7 @@ export const PUT = async (
     const updates = await req.json();
     const options = { new: true, runValidators: true };
 
-    const user = await Test.findByIdAndUpdate(id, updates, options);
+    const user = await Exam.findByIdAndUpdate(id, updates, options);
 
     if (!user) {
       return new Response(JSON.stringify({ message: "User not found" }), {
@@ -57,11 +57,11 @@ export async function DELETE(
   try {
     const id = (await params).id;
     await connectDB();
-    await Test.findByIdAndDelete(id);
+    await Exam.findByIdAndDelete(id);
     return NextResponse.json({ success: true, status: 203 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to delete test" },
+      { error: "Failed to delete exam" },
       { status: 500 }
     );
   }

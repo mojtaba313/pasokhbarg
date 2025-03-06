@@ -25,7 +25,7 @@ const Home = () => {
               <div className="flex justify-center items-center gap-4">
                 <div className="flex justify-center gap-4">
                   <Link
-                    href="/tests"
+                    href="/exams"
                     className="bg-blue-500 text-white px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors text-lg"
                   >
                     شروع کنید

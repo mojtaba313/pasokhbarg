@@ -1,4 +1,4 @@
-import { IQuestion } from "@/models/Test";
+import { IQuestion } from "@/models/Exam";
 
 export interface Question {
   number: number;
@@ -6,7 +6,7 @@ export interface Question {
   answer: number;
   timeSpent: number;
 }
-export type Test = {
+export type Exam = {
   startTime: Date;
   endTime: Date;
   questions: IQuestion[];

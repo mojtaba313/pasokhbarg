@@ -1,4 +1,3 @@
-// models/User.ts
 import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 
@@ -7,10 +6,10 @@ export interface IUser extends Document {
   name: string;
   username: string;
   password: string;
-  roles: string[]; // نقش‌های کاربر (مثلاً user, admin, assistant)
-  permissions: string[]; // دسترسی‌های کاربر
-  managedUsers?: mongoose.Types.ObjectId[]; // کاربران زیرمجموعه
-  managedBy?: mongoose.Types.ObjectId[]; // لیست ادمین‌هایی که این کاربر را مدیریت می‌کنند
+  roles: string[];
+  permissions: string[];
+  managedUsers?: mongoose.Types.ObjectId[];
+  managedBy?: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,10 +19,10 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    roles: { type: [String], default: ["user"] }, // نقش‌های کاربر (مثلاً user, admin, assistant)
-    permissions: { type: [String], default: [] }, // دسترسی‌های کاربر
-    managedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }], // کاربران زیرمجموعه
-    managedBy: [{ type: Schema.Types.ObjectId, ref: "User" }], // لیست ادمین‌هایی که این کاربر را مدیریت می‌کنند
+    roles: { type: [String], default: ["user"] },
+    permissions: { type: [String], default: [] },
+    managedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    managedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
@@ -36,8 +35,9 @@ UserSchema.pre<IUser>("save", async function (next) {
   next();
 });
 
-// Method to compare passwords
-UserSchema.methods.comparePassword = async function (candidatePassword: string) {
+UserSchema.methods.comparePassword = async function (
+  candidatePassword: string
+) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

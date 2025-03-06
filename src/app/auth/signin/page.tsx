@@ -1,4 +1,3 @@
-// app/auth/signin/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
@@ -24,7 +23,7 @@ export default function SignIn() {
     if (result?.error) {
       setError("نام کاربری یا رمز عبور نامعتبر است");
     } else {
-      router.push('/tests')
+      router.push('/exams')
     }
   };
 

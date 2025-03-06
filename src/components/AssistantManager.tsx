@@ -1,4 +1,3 @@
-// components/AssistantManager.tsx
 "use client";
 import { useState } from "react";
 import { IUser } from "@/models/User";
@@ -37,7 +36,6 @@ export default function AssistantManager({ admin }: { admin: IUser }) {
       ? permissions.filter(p => p !== perm)
       : [...permissions, perm];
     
-    // چک کردن دسترسی های مجاز
     if(admin.permissions.some(p => newPerms.includes(p))) {
       setPermissions(newPerms);
     } else {

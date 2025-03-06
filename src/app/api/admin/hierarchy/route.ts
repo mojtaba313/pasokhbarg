@@ -28,46 +28,44 @@ export async function POST(req: Request) {
 
     switch (action) {
       case "add-assistant": {
-        // منطق افزودن دستیار
-        if (admin.roles[0] !== "admin") {
-          return NextResponse.json(
-            { error: "فقط ادمین ها می توانند دستیار اضافه کنند" },
-            { status: 400 }
-          );
-        }
+        // if (admin.roles[0] !== "admin") {
+        //   return NextResponse.json(
+        //     { error: "فقط ادمین ها می توانند دستیار اضافه کنند" },
+        //     { status: 400 }
+        //   );
+        // }
 
-        // بررسی دسترسی‌ها
-        const invalidPerms = permissions.filter(
-          (p: string) => !admin.permissions.includes(p)
-        );
+        // const invalidPerms = permissions.filter(
+        //   (p: string) => !admin.permissions.includes(p)
+        // );
 
-        if (invalidPerms.length > 0) {
-          return NextResponse.json(
-            {
-              error: `دسترسی های غیرمجاز: ${invalidPerms.join(", ")}`,
-            },
-            { status: 400 }
-          );
-        }
+        // if (invalidPerms.length > 0) {
+        //   return NextResponse.json(
+        //     {
+        //       error: `دسترسی های غیرمجاز: ${invalidPerms.join(", ")}`,
+        //     },
+        //     { status: 400 }
+        //   );
+        // }
 
-        const user = await User.findById(userId);
-        if (!user) {
-          return NextResponse.json(
-            { error: "کاربر یافت نشد" },
-            { status: 404 }
-          );
-        }
+        // const user = await User.findById(userId);
+        // if (!user) {
+        //   return NextResponse.json(
+        //     { error: "کاربر یافت نشد" },
+        //     { status: 404 }
+        //   );
+        // }
 
-        user.roles = ["assistant"];
-        if (!user.managedBy.includes(adminId)) {
-          user.managedBy.push(adminId); // افزودن ادمین به لیست managedBy
-        }
-        user.maxPermissions = permissions;
-        admin.managedUsers.push(userId);
+        // user.roles = ["assistant"];
+        // if (!user.managedBy.includes(adminId)) {
+        //   user.managedBy.push(adminId);
+        // }
+        // user.maxPermissions = permissions;
+        // admin.managedUsers.push(userId);
 
-        await user.save();
-        await admin.save();
-        break;
+        // await user.save();
+        // await admin.save();
+        // break;
       }
 
       case "add-sub-users": {
@@ -86,15 +84,13 @@ export async function POST(req: Request) {
           );
         }
 
-        // افزودن کاربران به زیرمجموعه ادمین
         for (const user of users) {
           if (!user.managedBy.includes(adminId)) {
-            user.managedBy.push(adminId); // افزودن ادمین به لیست managedBy
+            user.managedBy.push(adminId);
             await user.save();
           }
         }
 
-        // افزودن کاربران به لیست managedUsers ادمین
         admin.managedUsers.push(...userIds);
         await admin.save();
         break;
@@ -111,13 +107,11 @@ export async function POST(req: Request) {
           );
         }
 
-        // حذف ادمین از لیست managedBy کاربر
         user.managedBy = user.managedBy.filter(
           (id: mongoose.Types.ObjectId) => id.toString() !== adminId
         );
         await user.save();
 
-        // حذف کاربر از لیست managedUsers ادمین
         admin.managedUsers = admin.managedUsers.filter(
           (id: mongoose.Types.ObjectId) => id.toString() !== userId
         );

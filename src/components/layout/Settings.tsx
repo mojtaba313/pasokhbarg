@@ -18,7 +18,6 @@ const Settings = () => {
   const [mouseRipple, setMouseRipple] = useState(true);
   const [isKeyBoardVisible, setIsKeyBoardVisible] = useState(false);
 
-  // بررسی حالت سیستم عامل و localStorage هنگام لود صفحه
   useEffect(() => {
     const isDarkMode =
       localStorage.theme === "dark" ||
@@ -33,7 +32,6 @@ const Settings = () => {
     updateMouseRipple(isMouseRipple);
   }, []);
 
-  // اعمال تغییرات دارک مود به HTML
   const updateDarkMode = (isDark: boolean) => {
     if (isDark) {
       document.documentElement.classList.add("dark");
@@ -54,7 +52,6 @@ const Settings = () => {
     }
   };
 
-  // تغییر حالت دارک مود
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
@@ -139,7 +136,6 @@ const Settings = () => {
       {mouseRipple ? (
         <AnimatedCursor
           showSystemCursor
-          // showSystemCursor={!mouseRipple}
           innerSize={12}
           outerSize={24}
           color="#002fff41"
@@ -153,7 +149,6 @@ const Settings = () => {
           }}
           outerStyle={{
             border: "2px solid #002fff",
-            // animation: 'spin 2s linear infinite'
           }}
           clickables={[
             "a",

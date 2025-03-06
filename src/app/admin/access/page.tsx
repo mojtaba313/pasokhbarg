@@ -1,4 +1,3 @@
-// app/admin/access/page.tsx
 "use client";
 import { useState, useEffect } from "react";
 import PageAccess, { IPageAccess } from "@/models/PageAccess";

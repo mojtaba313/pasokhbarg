@@ -1,6 +1,6 @@
 "use client";
 
-import { IQuestion } from "@/models/Test";
+import { IQuestion } from "@/models/Exam";
 import { foramttMin } from "@/utils/funcs";
 import React, {
   Dispatch,

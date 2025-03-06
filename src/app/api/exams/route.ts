@@ -1,7 +1,6 @@
-// app/api/tests/route.ts
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import Test from "@/models/Test";
+import Exam from "@/models/Exam";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/auth/authOptions";
 
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
       })
     );
 
-    const test = await Test.create({
+    const exam = await Exam.create({
       title,
       startQuestion,
       endQuestion,
@@ -44,9 +43,9 @@ export async function POST(req: Request) {
       viewed: false,
     });
 
-    return NextResponse.json(test);
+    return NextResponse.json(exam);
   } catch (error) {
-    console.error("Error creating test:", error);
+    console.error("Error creating exam:", error);
     return NextResponse.json(
       { message: "خطا در ایجاد آزمون" },
       { status: 500 }
@@ -66,13 +65,13 @@ export const GET = async () => {
     }
 
     await connectDB();
-    const result = await Test.find({ userId: session.user._id }).sort({
+    const result = await Exam.find({ userId: session.user._id }).sort({
       createdAt: -1,
     });
 
     return NextResponse.json(result);
   } catch (err) {
-    console.error("Error fetching tests:", err);
+    console.error("Error fetching exams:", err);
     return NextResponse.json(
       { message: "خطا در دریافت آزمون‌ها" },
       { status: 500 }

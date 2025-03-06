@@ -1,4 +1,4 @@
-import { Question } from "@/types/testTypes";
+import { Question } from "@/types/examTypes";
 
 export const foramttMin = (seconds: number) =>
   `${Math.floor(seconds / 60)

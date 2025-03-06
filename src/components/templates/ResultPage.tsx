@@ -8,43 +8,43 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Loader } from "../Loader";
-import TestResultQuestionRow from "../layout/TestResultQuestionRow";
+import ExamResultQuestionRow from "../layout/ExamResultQuestionRow";
 import { countAnswers } from "@/utils/funcs";
-import { Question, Test } from "@/types/testTypes";
+import { Question, Exam } from "@/types/examTypes";
 
 interface Props {
-  testID: string;
+  examID: string;
 }
 
-const ResultPage: FC<Props> = ({ testID }) => {
-  const [test, setTest] = useState<Test>();
+const ResultPage: FC<Props> = ({ examID }) => {
+  const [exam, setExam] = useState<Exam>();
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchTest = async () => {
-      const { data }: { data: Test } = await axios.get(`/api/tests/${testID}`);
-      setTest(data);
+    const fetchExam = async () => {
+      const { data }: { data: Exam } = await axios.get(`/api/exams/${examID}`);
+      setExam(data);
     };
 
-    fetchTest();
-  }, [testID]);
+    fetchExam();
+  }, [examID]);
 
-  const updateTest = async (newData?: Test) => {
+  const updateExam = async (newData?: Exam) => {
     setIsFetchingData(true);
-    const res = await axios.put(`/api/tests/${testID}`, newData || test);
+    const res = await axios.put(`/api/exams/${examID}`, newData || exam);
     if (res.status === 201) setIsFetchingData(false);
   };
 
-  if (!test) return <Loader />;
+  if (!exam) return <Loader />;
 
-  const handleEndTest = async () => {
-    const res = await axios.put(`/api/tests/${testID}`, {
+  const handleEndExam = async () => {
+    const res = await axios.put(`/api/exams/${examID}`, {
       endTime: new Date(),
-      questions: test.questions,
+      questions: exam.questions,
     });
 
-    if (res.status === 201) router.push("/tests");
+    if (res.status === 201) router.push("/exams");
   };
 
 
@@ -89,10 +89,10 @@ const ResultPage: FC<Props> = ({ testID }) => {
 
         {/* Questions Container */}
         <div className="flex gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
-          {Array(Math.ceil(test.questions?.length / 10 || 0))
+          {Array(Math.ceil(exam.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => {
-              const questions = test.questions.slice(10 * i, 10 * i + 10);
+              const questions = exam.questions.slice(10 * i, 10 * i + 10);
               const { correct, incorrect, unanswered } =
                 countAnswers(questions);
               return (
@@ -117,11 +117,11 @@ const ResultPage: FC<Props> = ({ testID }) => {
                   </div>
                   {/* Questions List */}
                   <div className="flex flex-col p-4 space-y-3">
-                    {test.questions
+                    {exam.questions
                       .slice(10 * i, 10 * i + 10)
                       .map((question, j) => (
                         <div key={`${i}-${j}`}>
-                          <TestResultQuestionRow question={question} />
+                          <ExamResultQuestionRow question={question} />
                         </div>
                       ))}
                   </div>

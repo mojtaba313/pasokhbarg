@@ -1,4 +1,3 @@
-// app/admin/dashboard/page.tsx
 "use client";
 import StatisticsCards from "@/components/admin/StatisticsCards";
 

@@ -16,14 +16,7 @@ const RoleBadge = ({ role }: RoleBadgeProps) => {
     }
   };
 
-  return (
-    // <Chip
-    //   label={role}
-    //   color={getRoleColor()}
-    //   size="small"
-    // />
-    <></>
-  );
+  return <></>;
 };
 
 export default RoleBadge;

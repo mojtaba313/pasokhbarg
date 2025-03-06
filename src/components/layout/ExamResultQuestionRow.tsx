@@ -1,6 +1,6 @@
 "use client";
 
-import { IQuestion } from "@/models/Test";
+import { IQuestion } from "@/models/Exam";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { foramttMin } from "@/utils/funcs";
 
@@ -8,7 +8,7 @@ interface Props {
   question: IQuestion;
 }
 
-const TestResultQuestionRow = ({ question }: Props) => {
+const ExamResultQuestionRow = ({ question }: Props) => {
   const { answer, selectedOption, number, timeSpent } = question;
 
   const renderOptionButton = (i: number) => {
@@ -60,4 +60,4 @@ const TestResultQuestionRow = ({ question }: Props) => {
   );
 };
 
-export default TestResultQuestionRow;
+export default ExamResultQuestionRow;

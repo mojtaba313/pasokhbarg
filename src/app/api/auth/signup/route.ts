@@ -1,15 +1,12 @@
-// app/api/auth/signup/route.ts
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 
-// app/api/auth/signup/route.ts
 export async function POST(req: Request) {
   try {
     await connectDB();
     const { name, username, password } = await req.json();
 
-    // اعتبارسنجی داده‌ها
     if (!username || !password || !name) {
       return NextResponse.json(
         { message: "تمامی فیلدها الزامی هستند" },
@@ -17,7 +14,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // بررسی وجود کاربر با همین نام کاربری
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return NextResponse.json(
@@ -26,10 +22,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // ایجاد کاربر جدید
     const user = await User.create({ 
       name, 
-      username: username.toLowerCase(), // تبدیل به حروف کوچک
+      username: username.toLowerCase(),
       password 
     });
 
@@ -45,7 +40,6 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Error in signup:", error);
     
-    // هندل کردن خطاهای MongoDB
     if (error.code === 11000) {
       return NextResponse.json(
         { message: "این نام کاربری قبلاً ثبت‌نام کرده است" },

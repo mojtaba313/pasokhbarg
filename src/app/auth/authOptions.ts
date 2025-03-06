@@ -1,4 +1,3 @@
-// app/auth/authOptions.ts
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import connectDB from "@/lib/mongodb";
@@ -25,7 +24,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error("کاربر یافت نشد");
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
         if (!isValid) {
           throw new Error("رمز عبور نامعتبر است");
         }
@@ -36,10 +38,10 @@ export const authOptions: NextAuthOptions = {
           username: user.username,
           name: user.name,
           roles: user.roles,
-          permissions: user.permissions, // اضافه کردن فیلد permissions
-          managedUsers: user.managedUsers?.map((u:any) => u.toString()), // اضافه کردن فیلد managedUsers
-          managedBy: user.managedBy?.toString(), // اضافه کردن فیلد managedBy
-          maxPermissions: user.maxPermissions, // اضافه کردن فیلد maxPermissions
+          permissions: user.permissions,
+          managedUsers: user.managedUsers?.map((u: any) => u.toString()),
+          managedBy: user.managedBy?.toString(),
+          maxPermissions: user.maxPermissions,
         };
       },
     }),

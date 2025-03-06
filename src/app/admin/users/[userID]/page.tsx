@@ -10,7 +10,6 @@ import { motion } from "framer-motion";
 import { ShieldCheckIcon, PlusIcon } from "@heroicons/react/24/outline";
 import PaginationControls from "@/components/PaginationControls";
 
-// Placeholder components (replace with your actual implementations)
 const Badge = ({
   count,
   color,
@@ -78,7 +77,6 @@ const ActionButton = ({
   </button>
 );
 
-// Define the User type
 type User = {
   id: string;
   name: string;
@@ -114,11 +112,11 @@ const UsersPage = () => {
             cell: ({ row }: { row: { original: User } }) => (
               <div className="flex gap-2">
                 <ActionButton
-                  icon={<ShieldCheckIcon className="w-5 h-5" />} // Updated icon
+                  icon={<ShieldCheckIcon className="w-5 h-5" />}
                   onClick={() => openRoleModal(row.original)}
                 />
                 <ActionButton
-                  icon={<PlusIcon className="w-5 h-5" />} // Updated icon
+                  icon={<PlusIcon className="w-5 h-5" />}
                   onClick={() => openHierarchyModal(row.original)}
                 />
               </div>
@@ -139,7 +137,6 @@ const UsersPage = () => {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // Placeholder functions for modals
   const openRoleModal = (user: User) => {
     console.log("Open role modal for:", user);
   };

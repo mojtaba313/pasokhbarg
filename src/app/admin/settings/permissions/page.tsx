@@ -5,7 +5,6 @@ import PermissionMatrix, { ActionT } from '@/components/admin/PermissionMatrix';
 const PermissionSettingsPage = () => {
   const [modules, setModules] = useState([
     { id: 'users', name: 'کاربران', read: true, create: false, update: false, delete: false },
-    // ... سایر ماژول‌ها
   ]);
 
   const handlePermissionChange = (moduleId:string, action:string, value:boolean) => {

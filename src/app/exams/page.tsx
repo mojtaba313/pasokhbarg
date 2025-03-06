@@ -9,24 +9,23 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import axios from "axios";
-import CreateTestModal from "@/components/CreateTestModal";
+import CreateExamModal from "@/components/CreateExamModal";
 import ConfirmModal from "@/components/ConfirmModal";
-import { ITest, IntermediateTest } from "@/models/Test";
+import { IExam, IntermediateExam } from "@/models/Exam";
 import { Loader } from "@/components/Loader";
 import { useSession } from "next-auth/react";
 
-import { signOut } from "next-auth/react"; // Import تابع signOut
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Session } from "next-auth";
 
-export default function Tests() {
-  const [tests, setTests] = useState<IntermediateTest[]>([]);
+export default function Exams() {
+  const [exams, setExams] = useState<IntermediateExam[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [testToDelete, setTestToDelete] = useState<string | null>(null);
+  const [examToDelete, setExamToDelete] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  // const [session, setSession] = useState<Session>();
   const session = useSession();
 
   useEffect(() => {
@@ -34,39 +33,39 @@ export default function Tests() {
       if (session.status !== "loading" && !session.data) {
         router.push("/auth/signin");
       } else {
-        fetchTests();
+        fetchExams();
       }
     };
 
-    const fetchTests = async () => {
+    const fetchExams = async () => {
       console.log("session", session);
-      const { data } = await axios.get("/api/tests");
-      setTests(data);
+      const { data } = await axios.get("/api/exams");
+      setExams(data);
       setIsLoading(false);
     };
 
     checkSession();
   }, [session]);
 
-  const handleDeleteTest = async () => {
-    if (!testToDelete) return;
+  const handleDeleteExam = async () => {
+    if (!examToDelete) return;
 
     try {
-      await axios.delete(`/api/tests/${testToDelete}`);
-      setTests(tests.filter((test) => test._id !== testToDelete));
+      await axios.delete(`/api/exams/${examToDelete}`);
+      setExams(exams.filter((exam) => exam._id !== examToDelete));
       setShowConfirmModal(false);
     } catch (error) {
-      console.error("Failed to delete test:", error);
+      console.error("Failed to delete exam:", error);
     }
   };
 
-  const handleToggleViewed: any = async (testId: string) => {
+  const handleToggleViewed: any = async (examId: string) => {
     try {
-      await axios.put(`/api/tests/${testId}`, {
-        viewed: !tests.find((t) => t._id === testId)?.viewed,
+      await axios.put(`/api/exams/${examId}`, {
+        viewed: !exams.find((t) => t._id === examId)?.viewed,
       });
-      setTests(
-        tests.map((t) => (t._id === testId ? { ...t, viewed: !t.viewed } : t))
+      setExams(
+        exams.map((t) => (t._id === examId ? { ...t, viewed: !t.viewed } : t))
       );
     } catch (error) {
       console.error("خطا در بروزرسانی وضعیت رویت:", error);
@@ -104,13 +103,13 @@ export default function Tests() {
 
         {/* لیست آزمون‌ها */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tests.map((test) => (
+          {exams.map((exam) => (
             <div
-              key={test._id}
+              key={exam._id}
               className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-xl transition-shadow duration-300 relative group"
             >
               <div className="absolute bottom-4 left-4 flex flex-col items-end">
-                <Link href={`/tests/${test._id}/add-answers`}>
+                <Link href={`/exams/${exam._id}/add-answers`}>
                   <DocumentCheckIcon
                     width={30}
                     className="text-green-500 m-2 hover:text-green-600"
@@ -121,8 +120,8 @@ export default function Tests() {
                   <div className="flex items-center relative">
                     <input
                       type="checkbox"
-                      checked={test.viewed}
-                      onChange={() => handleToggleViewed(test._id)}
+                      checked={exam.viewed}
+                      onChange={() => handleToggleViewed(exam._id)}
                       className="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-slate-300 checked:bg-blue-600 checked:border-blue-600"
                       id="check1"
                     />
@@ -148,7 +147,7 @@ export default function Tests() {
               {/* دکمه حذف */}
               <button
                 onClick={() => {
-                  setTestToDelete(test._id);
+                  setExamToDelete(exam._id);
                   setShowConfirmModal(true);
                 }}
                 className="absolute top-4 left-4 p-2 text-red-500 hover:text-red-600 transition-opacity duration-300"
@@ -157,16 +156,16 @@ export default function Tests() {
               </button>
 
               {/* محتوای کارت */}
-              <Link href={`/tests/${test._id}/result`}>
+              <Link href={`/exams/${exam._id}/result`}>
                 <DocumentTextIcon className="w-8 h-8 text-blue-500 mb-4" />
                 <h3 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">
-                  {test.title}
+                  {exam.title}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  سوالات {test.startQuestion} تا {test.endQuestion}
+                  سوالات {exam.startQuestion} تا {exam.endQuestion}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  {new Date(test.startTime).toLocaleDateString("fa-IR")}
+                  {new Date(exam.startTime).toLocaleDateString("fa-IR")}
                 </p>
               </Link>
             </div>
@@ -174,7 +173,7 @@ export default function Tests() {
         </div>
 
         {/* مودال ایجاد آزمون */}
-        <CreateTestModal
+        <CreateExamModal
           open={showCreateModal}
           onClose={() => setShowCreateModal(false)}
         />
@@ -183,7 +182,7 @@ export default function Tests() {
         <ConfirmModal
           open={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
-          onConfirm={handleDeleteTest}
+          onConfirm={handleDeleteExam}
           title="حذف آزمون"
           description="آیا مطمئن هستید که می‌خواهید این آزمون را حذف کنید؟ این عمل برگشت‌ناپذیر است."
         />

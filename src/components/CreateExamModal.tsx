@@ -1,19 +1,18 @@
-// components/CreateTestModal.tsx
 "use client";
 import { useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
-interface CreateTestModalProps {
+interface CreateExamModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-export default function CreateTestModal({
+export default function CreateExamModal({
   open,
   onClose,
-}: CreateTestModalProps) {
+}: CreateExamModalProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: "",
@@ -33,13 +32,13 @@ export default function CreateTestModal({
     );
 
     try {
-      const { data } = await axios.post("/api/tests", {
+      const { data } = await axios.post("/api/exams", {
         title: formData.title,
         startQuestion: sortedNumbers[0],
         endQuestion: sortedNumbers[1],
       });
 
-      router.push(`/tests/${data._id}`);
+      router.push(`/exams/${data._id}`);
       onClose();
     } catch (error: any) {
       setFormData((prev) => ({
