@@ -43,7 +43,6 @@ export const POST = async (req: Request) => {
   try {
     switch (action) {
       case "add-admin": {
-        console.log("admin-add");
         if (!userIds || !Array.isArray(userIds)) {
           return NextResponse.json(
             { error: "لیست کاربران نامعتبر است" },

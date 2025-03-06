@@ -33,7 +33,6 @@ export default function AccessManagement() {
   };
 
   if (!session?.user?.roles?.includes("admin")) {
-    console.log(session?.user)
     return <div>دسترسی غیرمجاز</div>;
   }
 

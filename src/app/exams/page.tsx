@@ -38,7 +38,6 @@ export default function Exams() {
     };
 
     const fetchExams = async () => {
-      console.log("session", session);
       const { data } = await axios.get("/api/exams");
       setExams(data);
       setIsLoading(false);

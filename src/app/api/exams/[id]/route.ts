@@ -18,7 +18,6 @@ export const GET = async (
     const result = await Exam.findById(id);
     return NextResponse.json(result);
   } catch (err) {
-    console.log("error--->", err);
     return NextResponse.json({ message: "has an error ==>", err });
   }
 };

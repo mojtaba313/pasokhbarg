@@ -36,7 +36,6 @@ const SingleAdminManage = () => {
     try {
       setIsLoading(true);
       const res = await fetch("/api/master/admins");
-      console.log(res);
       if (!res.ok) throw new Error("Failed to fetch users");
       const { admins, users } = await res.json();
       setAllUsers(users);
@@ -83,7 +82,6 @@ const SingleAdminManage = () => {
         callback?.();
       } else {
         showToast("error", "خطا در افزودن مدیران");
-        console.log(res);
       }
     } catch (error) {
       showToast("error", "خطا در ارتباط با سرور");

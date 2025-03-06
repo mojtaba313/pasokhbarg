@@ -34,7 +34,6 @@ const SingleAdminManage = ({ adminId }: Props) => {
     try {
       setIsLoading(true);
       const res = await fetch("/api/admin/users");
-      console.log(res);
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
       setOtherUsers(
