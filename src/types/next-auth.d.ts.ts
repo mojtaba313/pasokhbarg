@@ -8,8 +8,11 @@ declare module "next-auth" {
     _id: string;
     name?: string | null;
     username?: string | null;
-    roles?: string[]; // اضافه کردن فیلد roles
-    permissions?: string[]; // اضافه کردن فیلد permissions
+    roles: string[];
+    permissions: string[];
+    managedUsers?: string[]; // اضافه کردن فیلدهای جدید
+    managedBy?: string;
+    maxPermissions?: string[];
   }
 
   interface Session {
@@ -18,8 +21,11 @@ declare module "next-auth" {
       _id: string;
       name?: string | null;
       username?: string | null;
-      roles?: string[]; // اضافه کردن فیلد roles
-      permissions?: string[]; // اضافه کردن فیلد permissions
+      roles: string[];
+      permissions: string[];
+      managedUsers?: string[]; // اضافه کردن فیلدهای جدید
+      managedBy?: string;
+      maxPermissions?: string[];
     };
   }
 }
@@ -31,8 +37,11 @@ declare module "next-auth/jwt" {
       _id: string;
       name?: string | null;
       username?: string | null;
-      roles?: string[]; // اضافه کردن فیلد roles
-      permissions?: string[]; // اضافه کردن فیلد permissions
+      roles: string[];
+      permissions: string[];
+      managedUsers?: string[]; // اضافه کردن فیلدهای جدید
+      managedBy?: string;
+      maxPermissions?: string[];
     };
   }
 }

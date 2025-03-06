@@ -16,31 +16,30 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         await connectDB();
 
-        console.log("Credentials:", credentials); // لاگ اطلاعات ورودی
+        if (!credentials?.username || !credentials?.password) {
+          throw new Error("لطفاً نام کاربری و رمز عبور را وارد کنید");
+        }
 
-        const user = await User.findOne({ username: credentials?.username });
-        console.log("user authOptions", user);
+        const user = await User.findOne({ username: credentials.username });
         if (!user) {
-          console.log("User not found"); // لاگ عدم یافتن کاربر
           throw new Error("کاربر یافت نشد");
         }
 
-        const isValid = await bcrypt.compare(
-          credentials?.password || "",
-          user.password
-        );
+        const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) {
-          console.log("Invalid password"); // لاگ رمز عبور نامعتبر
-          throw new Error("رمز عبور نامعتبر");
+          throw new Error("رمز عبور نامعتبر است");
         }
 
-        console.log("User authorized:", user); // لاگ کاربر احراز هویت شده
         return {
-          id: user._id,
-          _id: user._id,
+          id: user._id.toString(),
+          _id: user._id.toString(),
           username: user.username,
           name: user.name,
           roles: user.roles,
+          permissions: user.permissions, // اضافه کردن فیلد permissions
+          managedUsers: user.managedUsers?.map((u:any) => u.toString()), // اضافه کردن فیلد managedUsers
+          managedBy: user.managedBy?.toString(), // اضافه کردن فیلد managedBy
+          maxPermissions: user.maxPermissions, // اضافه کردن فیلد maxPermissions
         };
       },
     }),
@@ -48,29 +47,20 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        const dbUser = await User.findById(user.id)
-          .select(
-            "roles permissions supervisors assistantOf assistantPermissions students"
-          )
-          .populate("supervisors assistantOf students");
-
-        token.user = {
-          ...user,
-          ...dbUser?.toObject(),
-        };
+        token.user = user;
       }
       return token;
     },
     async session({ session, token }) {
       if (token.user) {
-        session.user = token.user as any;
+        session.user = token.user;
       }
       return session;
     },
   },
   pages: {
-    signIn: "/auth/signin", // مسیر صفحه ورود
-    error: "/auth/signin", // مسیر صفحه خطا (اختیاری)
+    signIn: "/auth/signin",
+    error: "/auth/signin",
   },
-  secret: process.env.NEXTAUTH_SECRET, // کلید رمزنگاری
+  secret: process.env.NEXTAUTH_SECRET,
 };

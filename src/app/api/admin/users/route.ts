@@ -9,12 +9,17 @@ await connectDB();
 export async function GET() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.roles?.includes("admin")) {
+  if (
+    !(
+      session?.user?.roles?.includes("admin") ||
+      session?.user?.roles?.includes("master")
+    )
+  ) {
     return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
   }
 
   try {
-    const users = await User.find({}).select("-password");
+    const users:any = await User.find({}).select("-password");
     return NextResponse.json(users);
   } catch (error) {
     console.error("خطا در دریافت کاربران:", error);

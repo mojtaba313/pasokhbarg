@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/auth/authOptions";
 import User from "@/models/User";
 import connectDB from "@/lib/mongodb";
+import mongoose from "mongoose";
 
 export async function POST(req: Request) {
   await connectDB();
@@ -15,65 +16,130 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
   }
 
-  const { userId, action, targetUserId } = await req.json();
+  const { action, adminId, userId, permissions, userIds } = await req.json();
 
+  console.log('adminId',adminId)
+  
   try {
-    const user = await User.findById(userId);
-    const targetUser = await User.findById(targetUserId);
-
-    if (!user || !targetUser) {
-      return NextResponse.json({ error: "کاربر یافت نشد" }, { status: 404 });
+    const admin = await User.findById(adminId);
+    if (!admin) {
+      return NextResponse.json({ error: "ادمین یافت نشد" }, { status: 404 });
     }
 
     switch (action) {
-      case "add-student":
-        if (!user.roles.includes("admin")) {
+      case "add-assistant": {
+        // منطق افزودن دستیار
+        if (admin.roles[0] !== "admin") {
           return NextResponse.json(
-            { error: "فقط ادمین‌ها می‌توانند دانش‌آموز اضافه کنند" },
+            { error: "فقط ادمین ها می توانند دستیار اضافه کنند" },
             { status: 400 }
           );
         }
-        user.students.push(targetUserId);
-        targetUser.supervisors.push(userId);
-        break;
 
-      case "add-assistant":
-        if (!user.roles.includes("admin")) {
+        // بررسی دسترسی‌ها
+        const invalidPerms = permissions.filter(
+          (p: string) => !admin.permissions.includes(p)
+        );
+
+        if (invalidPerms.length > 0) {
           return NextResponse.json(
-            { error: "فقط ادمین‌ها می‌توانند دستیار اضافه کنند" },
+            {
+              error: `دسترسی های غیرمجاز: ${invalidPerms.join(", ")}`,
+            },
             { status: 400 }
           );
         }
-        targetUser.roles.push("assistant");
-        targetUser.assistantOf = userId;
-        user.students.push(targetUserId);
-        break;
 
-      case "update-permissions":
-        if (user.roles.includes("assistant")) {
-          const admin = await User.findById(user.assistantOf);
-          if (
-            !admin?.permissions.every((p: string) =>
-              admin.permissions.includes(p)
-            )
-          ) {
-            return NextResponse.json(
-              { error: "دستیار نمی‌تواند دسترسی بیشتری از ادمین داشته باشد" },
-              { status: 400 }
-            );
+        const user = await User.findById(userId);
+        if (!user) {
+          return NextResponse.json(
+            { error: "کاربر یافت نشد" },
+            { status: 404 }
+          );
+        }
+
+        user.roles = ["assistant"];
+        if (!user.managedBy.includes(adminId)) {
+          user.managedBy.push(adminId); // افزودن ادمین به لیست managedBy
+        }
+        user.maxPermissions = permissions;
+        admin.managedUsers.push(userId);
+
+        await user.save();
+        await admin.save();
+        break;
+      }
+
+      case "add-sub-users": {
+        if (!userIds || !Array.isArray(userIds)) {
+          return NextResponse.json(
+            { error: "لیست کاربران نامعتبر است" },
+            { status: 400 }
+          );
+        }
+
+        const users = await User.find({ _id: { $in: userIds } });
+        if (users.length !== userIds.length) {
+          return NextResponse.json(
+            { error: "برخی از کاربران یافت نشدند" },
+            { status: 404 }
+          );
+        }
+
+        // افزودن کاربران به زیرمجموعه ادمین
+        for (const user of users) {
+          if (!user.managedBy.includes(adminId)) {
+            user.managedBy.push(adminId); // افزودن ادمین به لیست managedBy
+            await user.save();
           }
         }
-        targetUser.permissions = (await req.json()).permissions;
-        break;
 
-      default:
-        return NextResponse.json({ error: "عملیات نامعتبر" }, { status: 400 });
+        // افزودن کاربران به لیست managedUsers ادمین
+        admin.managedUsers.push(...userIds);
+        await admin.save();
+        break;
+      }
+
+      case "remove-from-subset": {
+        const admin = await User.findById(adminId);
+        const user = await User.findById(userId);
+
+        if (!admin || !user) {
+          return NextResponse.json(
+            { error: "کاربر یا ادمین یافت نشد" },
+            { status: 404 }
+          );
+        }
+
+        // حذف ادمین از لیست managedBy کاربر
+        user.managedBy = user.managedBy.filter(
+          (id: mongoose.Types.ObjectId) => id.toString() !== adminId
+        );
+        await user.save();
+
+        // حذف کاربر از لیست managedUsers ادمین
+        admin.managedUsers = admin.managedUsers.filter(
+          (id: mongoose.Types.ObjectId) => id.toString() !== userId
+        );
+        await admin.save();
+
+        return NextResponse.json({
+          message: "کاربر با موفقیت از زیرمجموعه حذف شد",
+          success: true,
+        });
+      }
+
+
+
+      default: {
+        return NextResponse.json(
+          { error: "عملیات نامعتبر است" },
+          { status: 400 }
+        );
+      }
     }
 
-    await user.save();
-    await targetUser.save();
-
-    return NextResponse.json({ message: "عملیات موفقیت‌آمیز" });
+    return NextResponse.json({ message: "عملیات موفقیت‌آمیز", success: true });
   } catch (error) {
     console.error("خطا در مدیریت سلسله مراتب:", error);
     return NextResponse.json({ error: "خطای سرور" }, { status: 500 });

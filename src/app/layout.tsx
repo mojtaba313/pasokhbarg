@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Settings from "../components/layout/Settings";
 import Providers from "./Provider";
+import Navbar from "@/components/layout/Navbar";
+import "primereact/resources/themes/lara-light-blue/theme.css";
 
 export const metadata: Metadata = {
   title: "اپلیکیشن پاسخبرگ",
@@ -19,6 +21,7 @@ export default function RootLayout({
       <body className={`antialiased`}>
         <Providers>
           {children}
+          <Navbar />
           <Settings />
           {/* <AnimatedCursor
             innerSize={70}
