@@ -14,9 +14,13 @@ import CreateExamForm from "@/components/CreateExamForm";
 import { PrimeIcons } from "primereact/api";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { Loader } from "@/components/Loader";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import GroupExamCard from "@/components/layout/GroupExamCard";
 
 export default function Exams() {
   const [exams, setExams] = useState<IntermediateExam[]>([]);
+  const [groupExams, setGroupExams] = useState<IntermediateExam[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const toast = useRef<Toast>(null);
@@ -87,12 +91,53 @@ export default function Exams() {
     });
   };
 
+  useEffect(() => {
+    fetch("/api/exams/group/available")
+      .then((res) => res.json())
+      .then((data) => setGroupExams(data));
+  }, []);
+
+  const handleJoinExam = async (examId: string) => {
+    const res = await fetch(`/api/exams/group/${examId}/participate`, {
+      method: "POST",
+    });
+
+    if (res.ok) {
+      router.push(`/exams/group/${examId}`);
+    }
+  };
+
   if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         <Toast ref={toast} position="top-left" />
+
+        <div className="p-6">
+          <h1 className="text-2xl mb-4">آزمون‌های فعال</h1>
+          <DataTable value={exams}>
+            <Column field="title" header="عنوان آزمون" />
+            <Column field="startTime" header="زمان شروع" />
+            <Column field="endTime" header="زمان پایان" />
+            <Column
+              body={(rowData) => (
+                <Button
+                  label="ورود به آزمون"
+                  onClick={() => handleJoinExam(rowData._id)}
+                  disabled={rowData.status !== "active"}
+                />
+              )}
+            />
+          </DataTable>
+          {groupExams.map((exam) => (
+            <GroupExamCard
+              key={exam._id}
+              exam={exam}
+              onJoid={handleJoinExam}
+            />
+          ))}
+        </div>
 
         {/* Header */}
         <div className="flex justify-between items-center mb-12 glass-panel p-6">
@@ -104,6 +149,7 @@ export default function Exams() {
             className="!bg-blue-600 hover:!bg-blue-700 !border-0"
             onClick={() => setShowCreateModal(true)}
           />
+
         </div>
 
         {/* Exams Grid */}

@@ -1514,6 +1514,7 @@ import ExamCard from "@/components/layout/ExamCard";
 import CreateExamForm from "@/components/CreateExamForm";
 import { PrimeIcons } from "primereact/api";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { Loader } from "@/components/Loader";
 
 export default function Exams() {
   const [exams, setExams] = useState<IntermediateExam[]>([]);
@@ -1587,12 +1588,7 @@ export default function Exams() {
     });
   };
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <ProgressSpinner strokeWidth="4" animationDuration=".5s" />
-      </div>
-    );
+  if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen p-8">
@@ -1803,12 +1799,8 @@ import "./globals.css";
 import Settings from "../components/layout/Settings";
 import Providers from "./Provider";
 import Navbar from "@/components/layout/Navbar";
-// import "primereact/resources/themes/lara-dark-blue/theme.css";
-// import "primereact/resources/themes/lara-light-blue/theme.css";
-import "primereact/resources/themes/arya-blue/theme.css";
-import "primereact/resources/themes/lara-light-cyan/theme.css";
-import "primereact/resources/themes/lara-light-indigo/theme.css";
-
+import "primereact/resources/themes/lara-dark-blue/theme.css";
+import "primereact/resources/themes/lara-light-blue/theme.css";
 
 export const metadata: Metadata = {
   title: "اپلیکیشن پاسخبرگ",
@@ -2615,8 +2607,8 @@ export default KeyBoard;
 
 the codes of file with route : /components/Loader.tsx
  :export const Loader = () => (
-  <div className="fixed inset-0 bg-slate-800 flex items-center justify-center z-50">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+  <div className="fixed inset-0 backdrop-blur-3xl flex items-center justify-center z-50">
+    <div className="animate-spin rounded-full h-24 w-24 border-t-2 border-b-2 border-blue-500"></div>
   </div>
 );
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3132,6 +3124,7 @@ import {
   PlayIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { Tooltip } from "primereact/tooltip";
 
 interface Props {
   exam: IntermediateExam;
@@ -3150,7 +3143,7 @@ const ExamCard = ({ exam, onDelete, onViewedToggle }: Props) => {
       <div className="relative p-4 flex justify-center items-center text-slate-950 dark:text-white h-full">
         <div className="text-center">
           <h2 className="text-xl font-bold mb-3">{exam.title}</h2>
-          <p className="text-sm opacity-75">
+          <p className="text-sm">
             {formatDate(exam.startTime)} - {exam.questions.length} سوال
           </p>
         </div>
@@ -3163,14 +3156,34 @@ const ExamCard = ({ exam, onDelete, onViewedToggle }: Props) => {
 
   const footer = (
     <div className="flex justify-between items-center">
-      <TriStateCheckbox
-        checked={exam.viewed}
-        onChange={(e) => onViewedToggle(exam._id)}
-        className="[&>div]:border-white"
-        tooltip="تغییر وضعیت رویت"
-        tooltipOptions={{ position: "left" }}
-      />
-      <TriStateCheckbox checked={true} />
+      <Tooltip target=".logo" mouseTrack mouseTrackLeft={10} position="left">
+        تغییر وضعیت تایید
+      </Tooltip>
+      <div className="logo flex items-center relative cursor-pointer">
+        <input
+          type="checkbox"
+          checked={exam.viewed}
+          onChange={() => onViewedToggle(exam._id)}
+          className="view-check-box peer h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-slate-300 checked:bg-blue-600 checked:border-blue-600"
+          id="check1"
+        />
+        <span className="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3.5 w-3.5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            stroke="currentColor"
+            strokeWidth="1"
+          >
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            ></path>
+          </svg>
+        </span>
+      </div>
       <div className="flex gap-2">
         <Button
           icon={
@@ -3179,7 +3192,6 @@ const ExamCard = ({ exam, onDelete, onViewedToggle }: Props) => {
               className="!text-red-500 hover:!text-red-600"
             />
           }
-          severity="danger"
           rounded
           onClick={(e) => {
             toast.current?.show({
@@ -3190,7 +3202,7 @@ const ExamCard = ({ exam, onDelete, onViewedToggle }: Props) => {
                   <p>از حذف مطمئنی ؟؟!</p>
                   <div className="flex">
                     <Button
-                      className="!bg-red-500 !text-red-500"
+                      className="!bg-red-500 text-white"
                       color="red"
                       onClick={() => onDelete(exam._id)}
                     >
@@ -3229,15 +3241,15 @@ const ExamCard = ({ exam, onDelete, onViewedToggle }: Props) => {
       className="!bg-white/10 dark:!bg-gray-800/50 !backdrop-blur-3xl  !border-none !shadow-lg hover:!shadow-xl transition-all hover:scale-[1.02 h-full"
     >
       <Toast ref={toast} position="bottom-center" />
-      <div className="grid grid-cols-2 gap-4 text-center">
+      <div className="grid grid-cols-2 gap-4 text-center text-slate-800">
         <div className="glass-panel p-3">
-          <p className="text-sm opacity-75 mb-1">شماره سوالات</p>
+          <p className="text-sm mb-1">شماره سوالات</p>
           <p className="font-bold">
             {exam.startQuestion} - {exam.endQuestion}
           </p>
         </div>
         <div className="glass-panel p-3">
-          <p className="text-sm opacity-75 mb-1">وضعیت</p>
+          <p className="text-sm mb-1">وضعیت</p>
           <p
             className={`font-bold ${
               isStarted
@@ -4333,12 +4345,12 @@ const SingleExamPage: FC<Props> = ({  examID }) => {
 
   return (
     <div
-      className="min-h-screen w-screen h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+      className="min-h-screen w-screen h-screen overflow-hidden transition-colors duration-300"
       dir="ltr"
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="hidden xs:flex items-center justify-between p-8 h-20 bg-white dark:bg-gray-800 shadow-sm">
+        <div className="glass-panel bg-white/20 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
           <button
             onClick={() => router.push("/exams")}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
@@ -4379,13 +4391,13 @@ const SingleExamPage: FC<Props> = ({  examID }) => {
         </div>
 
         {/* Questions Container */}
-        <div className="flex pb-32 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
+        <div className="flex pb-32 pl-5 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
           {Array(Math.ceil(exam.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => (
               <div
                 key={`${i}-`}
-                className="border dark:border-slate-700 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-w-[300px]"
+                className="glass-effect border rounded-lg dark:border-slate-700 shadow-lg hover:shadow-xl transition-shadow duration-300 min-w-[300px]"
               >
                 {/* Card Header */}
                 <div className="flex justify-between p-4 border-b dark:border-gray-700 pr-8">

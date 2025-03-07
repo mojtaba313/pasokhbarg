@@ -30,7 +30,17 @@ export const PUT = async (
 
   try {
     await connectDB();
-    const updates = await req.json();
+    const exam = await Exam.findById(id);
+    let updates = await req.json();
+    if (exam.endTime) {
+      const questions = updates.questions.map((q: any) => ({
+        ...q,
+        selectedOption: undefined,
+      }));
+
+      updates = { ...updates, questions };
+    }
+
     const options = { new: true, runValidators: true };
 
     const user = await Exam.findByIdAndUpdate(id, updates, options);
