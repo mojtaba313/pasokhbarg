@@ -25,8 +25,10 @@ const QuestionRow = ({
   onPause,
   onChoose,
 }: Props) => {
-  const [time, setTime] = useState(question.timeSpent);
+  const [time, setTime] = useState<number>(question.timeSpent || 0);
   const intervalRef = useRef<number | null>(null);
+
+  // console.log(question.timeSpent)
 
   const isCurrent: boolean = question.number === currentQuestion;
 
@@ -67,6 +69,11 @@ const QuestionRow = ({
     }
   };
 
+  // useEffect(() => {
+  //   console.log(question.timeSpent, question)
+  //   if (question.timeSpent) setTime(question.timeSpent);
+  // }, []);
+
   useEffect(() => {
     if (isCurrent) window.addEventListener("keydown", handleUserKeyPress);
 
@@ -97,8 +104,8 @@ const QuestionRow = ({
   return (
     <div
       className={`flex items-center rounded-md ${
-        isCurrent ? "bg-blue-500/10" : ""
-      }`}
+        isCurrent ? "bg-blue-500/10 " : " "
+      } ${question.isSaving ? "opacity-70" : ""}`}
     >
       <button
         className="hover:bg-blue-500/20 flex justify-center items-center min-w-10 px-2 transition-colors rounded place-self-stretch"

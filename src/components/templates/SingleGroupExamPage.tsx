@@ -1,100 +1,143 @@
 "use client";
-import { useState, useEffect, FC } from "react";
+import { useState, useEffect, FC, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
   ArrowLeftIcon,
   ClockIcon,
-  DocumentTextIcon,
   ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import Timer from "@/components/Timer";
-import { IExam, IQuestion, IntermediateExam } from "@/models/Exam";
+import { IQuestion, IntermediateExam } from "@/models/Exam";
 import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
 import { useSession } from "next-auth/react";
-import { authOptions } from "@/app/auth/authOptions";
+import { IGroupExam } from "@/models/GroupExam";
 
 interface Props {
   examId: string;
 }
 
 const SingleGroupExamPage: FC<Props> = ({ examId }) => {
-  const [exam, setExam] = useState<IntermediateExam>();
+  const [exam, setExam] = useState<IGroupExam>();
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
   const [questions, setQuestions] = useState<IQuestion[]>([]);
   const { data: session } = useSession();
+  const [isFirstTime, setIsFirstTime] = useState(true);
 
-  const fetchExam = async () => {
-    const res = await axios.get(`/api/exams/group/${examId}`);
-    console.log(res);
-    if (res.status === 200) {
-      console.log(res.data);
-      setExam(res.data);
-      const answers = res.data.participants.find(
-        (p: any) => p.userId === session?.user?._id
-      )?.answers;
-      setQuestions(
-        answers?.length
-          ? answers
-          : res.data?.questions.map((q:any) => ({
-              number: q.number,
-              timeSpent: 0,
-              answer: 0,
-              selectedOption: 0,
-            }))
-      );
+  const fetchExam = useCallback(async () => {
+    try {
+      const res = await axios.get(`/api/exams/group/${examId}/participant`);
+      if (res.status === 200) {
+        const { exam, participant }: { exam: IGroupExam; participant: any } =
+          res.data;
+        console.log("participant", participant);
+        if (exam.endTime) router.push("/exams");
+        setExam(exam);
+        const setting =
+          participant?.answers?.map((p: any) => ({ ...p, isSaving: false })) ||
+          [];
+        console.log("setting", setting);
+        setQuestions(setting);
+        if (isFirstTime) {
+          setCurrentQuestion(exam.startQuestion);
+          setIsFirstTime(false);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch exam:", error);
     }
-  };
+  }, [examId, session?.user?._id, router, isFirstTime]);
 
   useEffect(() => {
-    if (examId) fetchExam();
-  }, [examId]);
-
-  const updateQuestions = async (newData?: IQuestion[]) => {
-    console.log(newData);
-    const res = await axios.put(`/api/exams/group/${examId}`, newData || exam);
-    setIsFetchingData(true);
-    if (res.status === 200) {
-      setIsFetchingData(false);
+    if (examId && session?.user?._id) {
       fetchExam();
     }
-  };
+  }, [examId, session?.user?._id]);
 
-  if (!exam) return <Loader />;
+  useEffect(() => {
+    console.log("exam", exam);
+    console.log("questions", questions);
+  }, [exam, questions]);
 
-  const handleEndExam = async () => {
-    const res = await axios.put(`/api/exams/${examId}`, {
-      endTime: new Date(),
-      questions: questions,
-    });
-
-    if (res.status === 201) router.push("/exams");
-  };
-
-  const onPause = (number: number, addingTime: number) => {
-    const newQuestions = questions?.map((q: IQuestion) =>
-      q.number === number ? { ...q, timeSpent: addingTime } : q
+  const toggleRowDisable = (number: number, savingState?: boolean) => {
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.number === number
+          ? {
+              ...q,
+              isSaving: savingState === undefined ? !q.isSaving : savingState,
+            }
+          : q
+      )
     );
-    updateQuestions(newQuestions);
+  };
+
+  const updateQuestions = async (
+    newQuestions: IQuestion[],
+    changeQuestionNumber: number
+  ) => {
+    try {
+      setIsFetchingData(true);
+      toggleRowDisable(changeQuestionNumber, true);
+      const res = await axios.put(
+        `/api/exams/group/${examId}/participant`,
+        newQuestions
+      );
+      if (res.data.success) {
+        setQuestions(newQuestions);
+      }
+    } catch (error) {
+      console.error("Failed to update questions:", error);
+      toggleRowDisable(changeQuestionNumber, false);
+    } finally {
+      setIsFetchingData(false);
+    }
   };
 
   const onChoose = (number: number, optionNumber: number) => {
-    const newQuestions = questions?.map((q) =>
+    if (questions.length === 0) return;
+    const newQuestions = questions.map((q) =>
       q.number === number ? { ...q, selectedOption: optionNumber } : q
     );
-    updateQuestions(newQuestions);
+    updateQuestions(newQuestions, number);
   };
+
+  const onPause = (number: number, addingTime: number) => {
+    if (!exam) return;
+    const newQuestions = questions?.map((q: any) =>
+      q.number === number ? { ...q, timeSpent: addingTime } : q
+    );
+    updateQuestions(newQuestions, number);
+  };
+
+  // useEffect(() => {
+  //   if (questions.length > 0) {
+  //     const newQuestions = questions.map((q) =>
+  //       q.number === currentQuestion ? { ...q, timeSpent: q.timeSpent + 1 } : q
+  //     );
+  //     setQuestions(newQuestions);
+  //     updateQuestions(newQuestions, currentQuestion); // ارسال درخواست به سرور
+  //   }
+  // }, [currentQuestion]);
+
+  if (!exam) return <Loader />;
 
   return (
     <div
       className="min-h-screen w-screen h-screen overflow-hidden transition-colors duration-300"
       dir="ltr"
     >
+      {/* <button
+        className="fixed bg-blue-500 rounded bottom-5 right-5 p-3"
+        onClick={fetchExam}
+      >
+        fetch
+      </button> */}
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="glass-panel bg-white/20 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
@@ -106,13 +149,13 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
             بازگشت
           </button>
 
-          <Timer startTime={exam.startTime} endTime={exam.endTime} />
+          <Timer startTime={exam.startTime as Date} />
 
           <div className="flex items-center justify-center">
             <div role="status" className={!isFetchingData ? "invisible" : ""}>
               <svg
                 aria-hidden="true"
-                className="w-4 h-4 mx-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                className="w-6 h-6 mx-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
                 viewBox="0 0 100 101"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -128,18 +171,14 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
               </svg>
               <span className="sr-only">Loading...</span>
             </div>
-            <button
-              onClick={() => setShowConfirmModal(true)}
-              className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors shadow-lg hover:shadow-red-500/50"
-            >
-              پایان آزمون
-            </button>
           </div>
         </div>
 
         {/* Questions Container */}
-        <div className="flex pb-32 pl-5 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
-          {Array(Math.ceil(exam.questions?.length / 10 || 0))
+        <div
+          className={`flex pb-32 pl-5 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20`}
+        >
+          {Array(Math.ceil(questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => (
               <div
@@ -158,32 +197,22 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
 
                 {/* Questions List */}
                 <div className="flex flex-col p-4 space-y-3">
-                  {questions
-                    .slice(10 * i, 10 * i + 10)
-                    .map((question, j) => (
-                      <div key={`${i}-${j}`}>
-                        <QuestionRow
-                          question={question}
-                          currentQuestion={currentQuestion}
-                          setCurrentQuestion={setCurrentQuestion}
-                          onPause={onPause}
-                          onChoose={onChoose}
-                        />
-                      </div>
-                    ))}
+                  {questions.slice(10 * i, 10 * i + 10).map((question, j) => (
+                    <div key={`${i}-${j}`}>
+                      <QuestionRow
+                        onPause={onPause}
+                        question={question}
+                        currentQuestion={currentQuestion}
+                        setCurrentQuestion={setCurrentQuestion}
+                        onChoose={onChoose}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
         </div>
       </div>
-      {/* مودال تأیید پایان */}
-      <ConfirmModal
-        open={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
-        onConfirm={handleEndExam}
-        title="پایان آزمون"
-        description="آیا مطمئن هستید که می‌خواهید این آزمون را پایان کنید؟ این عمل برگشت‌ناپذیر است."
-      />
     </div>
   );
 };

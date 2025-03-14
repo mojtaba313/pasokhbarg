@@ -5,6 +5,13 @@ export const foramttMin = (seconds: number) =>
     .toString()
     .padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`;
 
+export const foramttHour = (seconds: number) => {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
+};
+
 export const countAnswers = (questions: Question[]) => {
   let correct = 0;
   let incorrect = 0;

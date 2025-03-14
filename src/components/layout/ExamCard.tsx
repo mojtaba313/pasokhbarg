@@ -1,11 +1,9 @@
 // ExamCard.tsx
-import { IExam, IntermediateExam } from "@/models/Exam";
+import { IntermediateExam } from "@/models/Exam";
 import { Card } from "primereact/card";
 import { Button } from "primereact/button";
-import { ConfirmPopup } from "primereact/confirmpopup";
 import { Toast } from "primereact/toast";
 import { useRef } from "react";
-import { TriStateCheckbox } from "primereact/tristatecheckbox";
 import Link from "next/link";
 import { formatDate } from "@/utils/funcs";
 import {
@@ -34,12 +32,10 @@ const ExamCard = ({ exam, onDelete, onViewedToggle }: Props) => {
         <div className="text-center">
           <h2 className="text-xl font-bold mb-3">{exam.title}</h2>
           <p className="text-sm">
-            {formatDate(exam.startTime)} - {exam.questions.length} سوال
+            {isStarted ? formatDate(exam.startTime || new Date()) : ""}-{" "}
+            {exam.questions.length} سوال
           </p>
         </div>
-        <i
-          className={`pi ${isExamPassed ? "pi-history" : "pi-play"} text-3xl`}
-        />
       </div>
     </div>
   );

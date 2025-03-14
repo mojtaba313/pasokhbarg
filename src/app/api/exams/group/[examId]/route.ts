@@ -1,57 +1,32 @@
-// app/api/exams/group/[examId]/submit/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/auth/authOptions";
-import Exam from "@/models/Exam";
 import connectDB from "@/lib/mongodb";
+import GroupExam from "@/models/GroupExam";
 
-export async function PUT(
+export async function DELETE(
   req: Request,
+
   { params }: { params: Promise<{ examId: string }> }
 ) {
   try {
-    await connectDB();
     const examId = (await params).examId;
-    const session = await getServerSession(authOptions);
-    const questions = await req.json();
+    if (!examId) throw new Error();
 
-    const exam = await Exam.findById(examId);
-    const participant = exam.participants.find((p: any) => {
-      return p.userId.toString() === session?.user?._id;
-    });
-
-    if (!participant) throw new Error();
-
-    console.log('questions',questions)
-
-    participant.answers = questions;
-
-    console.log('2')
-    await exam.save();
-    console.log('1')
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ success: false, status: 500 });
-  }
-}
-
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ examId: string }> }
-) {
-  try {
     await connectDB();
-    const examId = (await params).examId;
     const session = await getServerSession(authOptions);
+    if (!session?.user?.roles?.includes("admin")) {
+      return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+    }
 
-    if (!session?.user?._id) throw new Error();
+    const deletedExam = await GroupExam.findByIdAndDelete(examId);
 
-    const exam = await Exam.findById(examId);
+    if (!deletedExam) {
+      return NextResponse.json({ error: "آزمون پیدا نشد" }, { status: 404 });
+    }
 
-    if (!exam.allowedSubsets.includes(session?.user?._id)) new Error();
-
-    return NextResponse.json(exam);
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ success: false, status: 500 });
+    return NextResponse.json({ error: "خطا در حذف آزمون" }, { status: 500 });
   }
 }

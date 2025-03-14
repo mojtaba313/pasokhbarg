@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -20,10 +20,14 @@ export default function SignIn() {
       password,
     });
 
+    const session = await getSession();
+    const isAdmin = session?.user?.roles.includes("admin");
+
     if (result?.error) {
       setError("نام کاربری یا رمز عبور نامعتبر است");
     } else {
-      router.push('/exams')
+      if (isAdmin) router.push("/admin/exams/group");
+      else router.push("/exams");
     }
   };
 

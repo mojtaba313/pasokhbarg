@@ -1,8 +1,6 @@
-// {allowedSubsets:{$in:[ObjectId("67c957a752ef970d045e5539")]}}
-
 import { authOptions } from "@/app/auth/authOptions";
 import connectDB from "@/lib/mongodb";
-import Exam from "@/models/Exam";
+import GroupExam from "@/models/GroupExam";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -16,8 +14,7 @@ export const GET = async () => {
       );
 
     await connectDB();
-    const result = await Exam.find({
-      type: "group",
+    const result = await GroupExam.find({
       allowedSubsets: { $in: [session.user._id] },
     });
 

@@ -18,13 +18,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body className={`antialiased`}>
+      <body className={`antialiased bg-slate-800`}>
         <Providers>
           <div className="w-full h-full z-10">
             {children}
             <Navbar />
             <Settings />
           </div>
+          
           <div className="blob-container">
             <div className="blob blob-one"></div>
             <div className="blob blob-two"></div>

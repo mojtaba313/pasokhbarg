@@ -7,6 +7,8 @@ import { useSession } from "next-auth/react";
 import { Button } from "primereact/button";
 import { IUser } from "@/models/User";
 import { Nullable } from "primereact/ts-helpers";
+import Spinner from "../Spinner";
+import axios from "axios";
 
 export default function CreateGroupExamForm({
   onSuccess,
@@ -14,38 +16,50 @@ export default function CreateGroupExamForm({
   onSuccess: () => void;
 }) {
   const { data: session } = useSession();
+  const [selectedSubsets, setSelectedSubsets] = useState<IUser[]>([]);
   const [subsets, setSubsets] = useState<IUser[]>([]);
+  const [isFetchingUsers, setIsFetchingUsers] = useState(true);
+  const [isSendingData, setIsSendingData] = useState(false);
   const [formData, setFormData] = useState<{
     title: string;
     startQuestion: number;
     endQuestion: number;
-    startTime: Nullable<Date>;
-    endTime: Nullable<Date>;
+    // startTime: Nullable<Date>;
+    // endTime: Nullable<Date>;
   }>({
     title: "",
     startQuestion: 1,
     endQuestion: 10,
-    startTime: null,
-    endTime: null,
+    // startTime: null,
+    // endTime: null,
   });
 
+  const fetchUsers = async () => {
+    setIsFetchingUsers(true);
+    const res = await axios.get(
+      `/api/admin/users?adminId=${session?.user?._id}`
+    );
+    setIsFetchingUsers(false);
+    if (res.status === 200) setSubsets(res.data);
+  };
+
   useEffect(() => {
-    fetch(`/api/admin/users?adminId=${session?.user?._id}`)
-      .then((res) => res?.json())
-      .then((data) => setSubsets(data));
+    fetchUsers();
   }, [session]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setIsSendingData(true);
     const res = await fetch("/api/exams/group", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...formData,
-        subsets: subsets.map((s) => s._id),
+        subsets: selectedSubsets.map((s) => s._id),
       }),
     });
 
+    setIsSendingData(false);
     if (res.ok) onSuccess();
   };
 
@@ -63,17 +77,21 @@ export default function CreateGroupExamForm({
 
       <div className="field">
         <label>زیرمجموعه‌های مجاز</label>
-        <MultiSelect
-          value={subsets}
-          options={subsets}
-          onChange={(e) => setSubsets(e.value)}
-          optionLabel="name"
-          display="chip"
-          filter
-        />
+        {isFetchingUsers ? (
+          <Spinner />
+        ) : (
+          <MultiSelect
+            value={selectedSubsets}
+            options={subsets}
+            onChange={(e) => setSelectedSubsets(e.value)}
+            optionLabel="name"
+            display="chip"
+            filter
+          />
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      {/* <div className="grid grid-cols-2 gap-4">
         <div className="field">
           <label>زمان شروع</label>
           <Calendar
@@ -93,7 +111,7 @@ export default function CreateGroupExamForm({
             required
           />
         </div>
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="field">
@@ -121,7 +139,13 @@ export default function CreateGroupExamForm({
         </div>
       </div>
 
-      <Button type="submit" label="ایجاد آزمون" className="mt-4" />
+      {isSendingData ? (
+        <Button className="mt-4 opacity-70 cursor-not-allowed" disabled>
+          <Spinner />
+        </Button>
+      ) : (
+        <Button type="submit" label="ایجاد آزمون" className="mt-4" />
+      )}
     </form>
   );
 }

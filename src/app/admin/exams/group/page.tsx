@@ -1,77 +1,136 @@
-// app/admin/exams/group/page.tsx
 "use client";
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import CreateGroupExamForm from "@/components/admin/CreateGroupExamForm";
-import { IExam } from "@/models/Exam";
+import axios from "axios";
+import { IGroupExam } from "@/models/GroupExam";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { ExclamationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Loader } from "@/components/Loader";
+import { foramttHour } from "@/utils/funcs";
 
 export default function GroupExamsPage() {
-  const { data: session } = useSession();
-  const [exams, setExams] = useState([]);
+  const [exams, setExams] = useState<IGroupExam[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [now, setNow] = useState(Date.now());
 
-  useEffect(() => {
-    fetch("/api/exams/group")
-      .then((res) => res.json())
-      .then((data) => setExams(data));
-  }, []);
-
-  const handleExamAction = (examId: string, status: IExam["status"]) => {};
-
-  const fetchExams = () => {};
-
-  const statusBodyTemplate = (rowData: IExam) => {
-    const statusColors = {
-      planned: "bg-blue-500",
-      active: "bg-green-500",
-      finished: "bg-red-500",
-    };
-    return (
-      <span
-        className={`${
-          statusColors[rowData.status]
-        } text-white px-2 py-1 rounded`}
-      >
-        {rowData.status === "planned" && "برنامه‌ریزی شده"}
-        {rowData.status === "active" && "فعال"}
-        {rowData.status === "finished" && "پایان یافته"}
-      </span>
-    );
+  const fetchExams = async () => {
+    setIsLoading(true);
+    const res = await axios.get("/api/exams/group");
+    if (res.status === 200) setExams(res.data);
+    setIsLoading(false);
   };
 
+  useEffect(() => {
+    fetchExams();
+  }, []);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const handleExamAction = async (examId: string) => {
+    confirmDialog({
+      message: "آیا مطمئنید ؟؟",
+      header: "تاییدیه",
+      icon: <ExclamationCircleIcon width={30} />,
+      accept: async () => {
+        const res = await axios.put("/api/exams/group", {
+          examId,
+          action: "toggle-active",
+        });
+        console.log(res);
+        if (res.status === 200) fetchExams();
+      },
+    });
+  };
+
+  const handleDeleteExam = async (examId: string) => {
+    confirmDialog({
+      message: "آیا مطمئنید که می‌خواهید این آزمون را حذف کنید؟",
+      header: "تاییدیه حذف",
+      icon: <ExclamationCircleIcon width={30} />,
+      accept: async () => {
+        const res = await axios.delete(`/api/exams/group/${examId}`);
+        console.log(res);
+        if (res.status === 200) fetchExams();
+      },
+    });
+  };
+
+  const statusBodyTemplate = (rowData: IGroupExam) =>
+    !rowData.startTime ? (
+      <Button
+        label="شروع آزمون"
+        className="!bg-green-400 !text-green-600"
+        onClick={() => handleExamAction(rowData._id)}
+      />
+    ) : !rowData.endTime ? (
+      <Button
+        label="توقف آزمون"
+        className="!bg-red-400 !text-red-600"
+        onClick={() => handleExamAction(rowData._id)}
+      />
+    ) : (
+      <Button
+        label="آزمون پایان یافته"
+        className="!bg-gray-400 !text-gray-600"
+        onClick={() => handleExamAction(rowData._id)}
+        disabled
+      />
+    );
+
+  const timeSpentTemplate = ({ startTime, endTime }: IGroupExam) =>
+    !startTime
+      ? ""
+      : endTime
+      ? foramttHour(
+          Math.floor(
+            (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000
+          )
+        )
+      : foramttHour(Math.floor((now - new Date(startTime).getTime()) / 1000));
+
+  const removeBodyTemplate = (rowData: IGroupExam) => (
+    <button onClick={() => handleDeleteExam(rowData._id)}>
+      <TrashIcon width={30} className="text-red-500 hover:text-red-600" />
+    </button>
+  );
+
+  if (isLoading) return <Loader />;
   return (
     <div className="p-6">
       <div className="flex justify-between mb-4">
         <h1 className="text-2xl">مدیریت آزمون‌های جمعی</h1>
         <Button
           label="ایجاد آزمون جدید"
+          className="text-slate-950 dark:text-white"
           icon="pi pi-plus"
           onClick={() => setShowCreateModal(true)}
         />
       </div>
-
-      <DataTable value={exams}>
-        <Column field="title" header="عنوان" />
-        <Column field="startTime" header="زمان شروع" />
-        <Column field="endTime" header="زمان پایان" />
-        <Column field="status" header="وضعیت" body={statusBodyTemplate} />
-        <Column
-          body={(rowData: IExam) => (
-            <Button
-              className="text-!white"
-              label={rowData.status === "active" ? "توقف آزمون" : "شروع آزمون"}
-              severity={rowData.status === "active" ? "danger" : "success"}
-              onClick={() =>
-                handleExamAction(rowData._id as string, rowData.status)
-              }
-            />
-          )}
-        />
-      </DataTable>
+      <div className="glass-effect p-4 rounded-lg">
+        <DataTable value={exams}>
+          <Column field="title" header="عنوان" />
+          <Column field="startTime" header="زمان شروع" />
+          <Column field="endTime" header="زمان پایان" />
+          <Column
+            field="spentTime"
+            header="زمان سپری شده"
+            body={timeSpentTemplate}
+          />
+          <Column body={statusBodyTemplate} />
+          <Column body={removeBodyTemplate} />
+        </DataTable>
+      </div>
 
       <Dialog
         header="ایجاد آزمون جمعی"
@@ -86,6 +145,7 @@ export default function GroupExamsPage() {
           }}
         />
       </Dialog>
+      <ConfirmDialog />
     </div>
   );
 }

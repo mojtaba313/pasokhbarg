@@ -1,5 +1,5 @@
 import connectDB from "@/lib/mongodb";
-import Exam from "@/models/Exam";
+import Exam, { IExam } from "@/models/Exam";
 import { NextResponse } from "next/server";
 
 export const GET = async (
@@ -31,11 +31,16 @@ export const PUT = async (
   try {
     await connectDB();
     const exam = await Exam.findById(id);
-    let updates = await req.json();
+    let updates = (await req.json());
+
+    const times = updates.questions.map((q:any) => q.timeSpent);
+    console.log('times',times)
+
     if (exam.endTime) {
-      const questions = updates.questions.map((q: any) => ({
+      const questions = updates.questions?.map((q: any) => ({
         ...q,
         selectedOption: undefined,
+        timeSpent:undefined
       }));
 
       updates = { ...updates, questions };

@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { Toast } from "primereact/toast";
-import { ProgressSpinner } from "primereact/progressspinner";
 import { IntermediateExam } from "@/models/Exam";
 import ExamCard from "@/components/layout/ExamCard";
 import CreateExamForm from "@/components/CreateExamForm";
@@ -38,12 +37,19 @@ export default function Exams() {
     }
   };
 
+  const fetchGroupExams = async () => {
+    const res = await axios.get("/api/exams/group/participant");
+    console.log(res);
+    if (res.status === 200) setGroupExams(res.data);
+  };
+
   useEffect(() => {
     const checkSession = async () => {
       if (session.status !== "loading" && !session.data) {
         router.push("/auth/signin");
       } else {
         fetchExams();
+        fetchGroupExams();
       }
     };
 
@@ -91,18 +97,9 @@ export default function Exams() {
     });
   };
 
-  useEffect(() => {
-    fetch("/api/exams/group/available")
-      .then((res) => res.json())
-      .then((data) => setGroupExams(data));
-  }, []);
-
   const handleJoinExam = async (examId: string) => {
-    const res = await fetch(`/api/exams/group/${examId}/participate`, {
-      method: "POST",
-    });
-
-    if (res.ok) {
+    const res = await axios.post(`/api/exams/group/${examId}/participant`);
+    if (res.status === 200) {
       router.push(`/exams/group/${examId}`);
     }
   };
@@ -114,55 +111,50 @@ export default function Exams() {
       <div className="max-w-7xl mx-auto">
         <Toast ref={toast} position="top-left" />
 
-        <div className="p-6">
-          <h1 className="text-2xl mb-4">آزمون‌های فعال</h1>
-          <DataTable value={exams}>
-            <Column field="title" header="عنوان آزمون" />
-            <Column field="startTime" header="زمان شروع" />
-            <Column field="endTime" header="زمان پایان" />
-            <Column
-              body={(rowData) => (
-                <Button
-                  label="ورود به آزمون"
-                  onClick={() => handleJoinExam(rowData._id)}
-                  disabled={rowData.status !== "active"}
-                />
-              )}
+        {/* Local Exams */}
+        <section className="mb-20">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-12 glass-panel p-6">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              مدیریت آزمون‌ها
+            </h1>
+            <Button
+              icon={<PlusIcon className="!text-white" />}
+              className="!bg-blue-600 hover:!bg-blue-700 !border-0"
+              onClick={() => setShowCreateModal(true)}
             />
-          </DataTable>
-          {groupExams.map((exam) => (
-            <GroupExamCard
-              key={exam._id}
-              exam={exam}
-              onJoid={handleJoinExam}
-            />
-          ))}
-        </div>
+          </div>
 
-        {/* Header */}
-        <div className="flex justify-between items-center mb-12 glass-panel p-6">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            مدیریت آزمون‌ها
-          </h1>
-          <Button
-            icon={<PlusIcon className="!text-white" />}
-            className="!bg-blue-600 hover:!bg-blue-700 !border-0"
-            onClick={() => setShowCreateModal(true)}
-          />
+          {/* Exams Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {exams.map((exam) => (
+              <ExamCard
+                key={exam._id}
+                exam={exam}
+                onDelete={handleDeleteExam}
+                onViewedToggle={handleToggleViewed}
+              />
+            ))}
+          </div>
+        </section>
 
-        </div>
-
-        {/* Exams Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {exams.map((exam) => (
-            <ExamCard
-              key={exam._id}
-              exam={exam}
-              onDelete={handleDeleteExam}
-              onViewedToggle={handleToggleViewed}
-            />
-          ))}
-        </div>
+        {/* Group Exmas */}
+        <section>
+          <div className="flex justify-between items-center mb-12 glass-panel p-6">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              آزمون های دسته جمعی
+            </h1>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {groupExams?.map((exam) => (
+              <GroupExamCard
+                key={exam._id}
+                exam={exam}
+                onJoid={handleJoinExam}
+              />
+            ))}
+          </div>
+        </section>
 
         {/* Create Exam Dialog */}
         <Dialog

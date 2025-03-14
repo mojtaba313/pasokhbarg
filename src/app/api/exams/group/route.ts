@@ -4,46 +4,46 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/auth/authOptions";
 import Exam, { IQuestion } from "@/models/Exam";
 import connectDB from "@/lib/mongodb";
+import GroupExam, { IGroupExam } from "@/models/GroupExam";
 
 export async function POST(req: Request) {
-  await connectDB();
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.roles?.includes("admin")) {
-    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+  try {
+    await connectDB();
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.roles?.includes("admin")) {
+      return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+    }
+
+    const { title, startQuestion, endQuestion, subsets } = await req.json();
+
+    const questionsRange = [startQuestion, endQuestion].sort((a, b) => a - b);
+    const questions = Array(questionsRange[1] - questionsRange[0] + 1)
+      .fill(0)
+      .map((_, i) => ({ number: questionsRange[0] + i, answer: 0 }));
+
+    const participants = subsets.map((s: string) => ({
+      userId: s,
+      answers: questions.map((q) => ({
+        number: q.number,
+        selectedOption: 0,
+        timeSpent: 0,
+      })),
+    }));
+
+    const exam = await GroupExam.create({
+      title,
+      startQuestion,
+      endQuestion,
+      allowedSubsets: subsets,
+      participants,
+      adminId: session.user?._id,
+      questions,
+    });
+
+    return NextResponse.json(exam);
+  } catch (error) {
+    return NextResponse.json({ status: 500 });
   }
-
-  const { title, startQuestion, endQuestion, subsets, startTime, endTime } =
-    await req.json();
-
-  const questionsRange = [startQuestion, endQuestion].sort((a, b) => a - b);
-  const questions = Array(questionsRange[1] - questionsRange[0] + 1)
-    .fill(0)
-    .map((_, i) => ({ number: questionsRange[0] + i, answer: 0 }));
-
-  const participants = subsets.map((s: string) => ({
-    userId: s,
-    answers: questions.map((q) => ({
-      number: q.number,
-      selectedOption: 0,
-      timeSpent: 0,
-    })),
-  }));
-
-  const exam = await Exam.create({
-    title,
-    type: "group",
-    startQuestion,
-    endQuestion,
-    allowedSubsets: subsets,
-    startTime: new Date(startTime),
-    endTime: new Date(endTime),
-    status: "planned",
-    participants,
-    adminId: session.user?._id,
-    questions,
-  });
-
-  return NextResponse.json(exam);
 }
 
 export async function PUT(req: Request) {
@@ -54,13 +54,25 @@ export async function PUT(req: Request) {
 
   const { examId, action } = await req.json();
 
-  const exam = await Exam.findById(examId);
+  const exam: IGroupExam | null = await GroupExam.findById(examId);
   if (!exam)
     return NextResponse.json({ error: "آزمون یافت نشد" }, { status: 404 });
 
-  if (action === "start") exam.status = "active";
-  if (action === "stop") exam.status = "finished";
-  await exam.save();
+  switch (action) {
+    case "toggle-active": {
+      if (!exam.startTime) {
+        exam.startTime = new Date();
+        await exam.save();
+      } else if (!exam.endTime) {
+        exam.endTime = new Date();
+        await exam.save();
+      }
+      break;
+    }
+
+    default:
+      break;
+  }
 
   return NextResponse.json(exam);
 }
@@ -75,10 +87,11 @@ export async function GET() {
   }
 
   try {
-    const users: any = isMaster
-      ? await Exam.find({ type: "group" })
-      : await Exam.find({ type: "group", adminId: session?.user?._id });
-    return NextResponse.json(users);
+    const exams: any = isMaster
+      ? await GroupExam.find({})
+      : await GroupExam.find({ adminId: session?.user?._id });
+
+    return NextResponse.json(exams);
   } catch (error) {
     console.error("خطا در دریافت کاربران:", error);
     return NextResponse.json(

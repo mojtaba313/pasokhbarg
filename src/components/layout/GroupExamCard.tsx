@@ -10,12 +10,10 @@ import Link from "next/link";
 import { formatDate } from "@/utils/funcs";
 import {
   ClipboardDocumentListIcon,
-  ExclamationCircleIcon,
   PlayIcon,
-  TrashIcon,
 } from "@heroicons/react/24/outline";
-import { Tooltip } from "primereact/tooltip";
-import { title } from "process";
+import { useRouter } from "next/navigation";
+import Timer from "../Timer";
 
 interface Props {
   exam: IntermediateExam;
@@ -24,13 +22,34 @@ interface Props {
 
 const GroupExamCard = ({ exam, onJoid }: Props) => {
   const toast = useRef<Toast>(null);
+  const router = useRouter();
 
-  const iconInfos =
-    exam.status === "planned"
-      ? { title: "برنامه ریزی شده", className: "text-blue-500" }
-      : exam.status === "active"
-      ? { title: "در حال اجرا", className: "text-green-500" }
-      : { title: "اتمام مهلت", className: "text-red-500" };
+  const iconInfos = !exam.startTime
+    ? {
+        title: "هنوز زمان آزمون فرانرسیده",
+        className: "text-blue-500",
+        status: "notStarted",
+        elem: (
+          <ClipboardDocumentListIcon width={30} className="!text-green-500" />
+        ),
+      }
+    : !exam.endTime
+    ? {
+        title: "در حال اجرا",
+        className: "text-green-500",
+        status: "running",
+        elem: <PlayIcon width={30} className="text-green-500" />,
+        onClick: () => onJoid(exam._id),
+      }
+    : {
+        title: "پایان یافته",
+        className: "text-red-500",
+        status: "finished",
+        elem: (
+          <ClipboardDocumentListIcon width={30} className="text-green-500" />
+        ),
+        onClick: () => router.push(`/exams/group/${exam._id}/result`),
+      };
 
   const header = (
     <div className="glass-effect h-32 relative rounded-lg overflow-hidden">
@@ -39,7 +58,8 @@ const GroupExamCard = ({ exam, onJoid }: Props) => {
         <div className="text-center">
           <h2 className="text-xl font-bold mb-3">{exam.title}</h2>
           <p className="text-sm">
-            {formatDate(exam.startTime)} - {exam.questions.length} سوال
+            {exam.startTime && formatDate(exam.startTime)} -{" "}
+            {exam.questions.length} سوال
           </p>
         </div>
       </div>
@@ -68,22 +88,17 @@ const GroupExamCard = ({ exam, onJoid }: Props) => {
       className="!bg-white/10 dark:!bg-gray-800/50 !backdrop-blur-3xl  !border-none !shadow-lg hover:!shadow-xl transition-all h-full"
     >
       <Toast ref={toast} position="bottom-center" />
-      <div className="flex justify-center items-center w-full h-full ">
+      <div className="flex justify-center items-center w-full h-full gap-3">
         <Button
-          icon={
-            false ? (
-              <ClipboardDocumentListIcon
-                width={20}
-                className="text-green-500"
-              />
-            ) : (
-              <PlayIcon width={20} className="text-yellow-500" />
-            )
-          }
+          icon={iconInfos.elem}
           rounded
           severity="secondary"
-          onClick={() => onJoid(exam._id)}
+          onClick={iconInfos.onClick}
+          className={iconInfos.className}
         />
+        {iconInfos.status === "running" && (
+          <Timer startTime={exam.startTime as Date} noIcon />
+        )}
       </div>
     </Card>
   );

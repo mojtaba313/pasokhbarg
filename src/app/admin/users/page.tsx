@@ -4,7 +4,6 @@ import { useSession } from "next-auth/react";
 import { IUser } from "@/models/User";
 
 export default function UserManagement() {
-  const { data: session } = useSession();
   const [users, setUsers] = useState<IUser[]>([]);
 
   useEffect(() => {
@@ -15,7 +14,7 @@ export default function UserManagement() {
     };
 
     fetchUsers();
-  }, [session]);
+  }, []);
 
   return (
     <div className="p-8">

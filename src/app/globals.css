@@ -47,6 +47,10 @@ button {
   @apply px-2 py-1 rounded;
 }
 
+input {
+  @apply dark:bg-slate-800 bg-gray-400 rounded-md px-2 py-1 border-blue-500/70 shadow-md shadow-blue-500/10;
+}
+
 .glass {
   @apply isolate rounded-xl bg-slate-900/40 shadow-lg ring-1 ring-black/5 backdrop-blur-3xl;
 }
@@ -81,9 +85,9 @@ button {
 .p-dialog-default,
 .p-ripple-disabled,
 .p-dialog-enter-done {
-  @apply dark:!bg-slate-800/80 !bg-white/50;
+  @apply dark:!bg-slate-800/90 !bg-white/80 text-slate-950 dark:text-white;
   > * {
-    background: transparent !important;
+    @apply !bg-transparent text-white;
   }
 }
 
@@ -110,7 +114,7 @@ button {
   animation: movement 16s ease-in-out infinite both,
     transform-blob 10s ease-in-out infinite both alternate;
 }
-
+/* 
 @keyframes transform-blob {
   100% {
     border-radius: 33% 67% 70% 30% / 30% 40% 70% 70%;
@@ -127,7 +131,7 @@ button {
   80% {
     border-radius: 40% 60% 42% 58% / 51% 51% 49% 59%;
   }
-}
+} */
 
 @keyframes movement {
   0%,
