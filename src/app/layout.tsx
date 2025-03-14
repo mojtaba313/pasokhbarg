@@ -23,14 +23,9 @@ export default function RootLayout({
           <div className="w-full h-full z-10">
             {children}
             <Navbar />
-            <Settings />
           </div>
-          
-          <div className="blob-container">
-            <div className="blob blob-one"></div>
-            <div className="blob blob-two"></div>
-            <div className="blob blob-three"></div>
-          </div>
+
+          <Settings />
         </Providers>
       </body>
     </html>

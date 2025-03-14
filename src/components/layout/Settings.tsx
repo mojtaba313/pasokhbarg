@@ -19,6 +19,7 @@ const Settings = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [mouseRipple, setMouseRipple] = useState(true);
   const [isKeyBoardVisible, setIsKeyBoardVisible] = useState(false);
+  const [bgEffect, setBgEffect] = useState(true);
 
   useEffect(() => {
     const isDarkMode =
@@ -32,6 +33,8 @@ const Settings = () => {
     const isMouseRipple = localStorage.mouse !== "no-ripple";
     setMouseRipple(isMouseRipple);
     updateMouseRipple(isMouseRipple);
+
+    setBgEffect(!localStorage.bg !== false);
   }, []);
 
   const updateDarkMode = (isDark: boolean) => {
@@ -58,6 +61,13 @@ const Settings = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
     updateDarkMode(newDarkMode);
+  };
+
+  const toggleBgEffect = () => {
+    setBgEffect((prev) => {
+      localStorage.bg = !prev;
+      return !prev;
+    });
   };
 
   const toggleMouseRipple = () => {
@@ -135,17 +145,31 @@ const Settings = () => {
           />
         </button>
 
+        {/* bgEffect */}
+        <button
+          className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          onClick={toggleBgEffect}
+          aria-label="Toggle dark mode"
+        >
+          <div
+            className={`w-5 h-5 rounded-full blur-sm ${
+              bgEffect
+                ? "bg-gray-800 dark:bg-gray-200"
+                : "bg-yellow-400"
+            }`}
+          ></div>
+        </button>
+
         {/* logout */}
         <button
           className="flex items-center justify-center w-12 h-12 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors !bg-red-500 text-white hover:!bg-red-600 shadow-lg hover:shadow-red-500/50"
           onClick={() => signOut({ callbackUrl: "/auth/signin" })}
           aria-label="Toggle dark mode"
         >
-          <ArrowLeftStartOnRectangleIcon
-            width={24}
-          />
+          <ArrowLeftStartOnRectangleIcon width={24} />
         </button>
       </div>
+
       {mouseRipple ? (
         <AnimatedCursor
           showSystemCursor
@@ -179,6 +203,14 @@ const Settings = () => {
         />
       ) : (
         <div className="default-cursor"></div>
+      )}
+
+      {bgEffect && (
+        <div className="blob-container">
+          <div className="blob blob-one"></div>
+          <div className="blob blob-two"></div>
+          <div className="blob blob-three"></div>
+        </div>
       )}
 
       <KeyBoard isVisible={isKeyBoardVisible} />

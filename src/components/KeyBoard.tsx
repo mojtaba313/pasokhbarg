@@ -1,13 +1,22 @@
-"use client";
-import React, { useEffect, useState } from "react";
+import React, { FC, useRef, useEffect, useState, ReactElement } from "react";
+import dynamic from "next/dynamic";
 import {
   XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 
+const Draggable = dynamic(() => import("react-draggable"), { ssr: false });
+
+interface Key {
+  id: number;
+  title: string;
+  key: string;
+  icon?: ReactElement;
+}
+
 let i = 0;
-const keys = [
+const keys: Key[] = [
   { id: i++, title: "1", key: "1" },
   { id: i++, title: "2", key: "2" },
   { id: i++, title: "3", key: "3" },
@@ -40,81 +49,42 @@ const keys = [
   },
 ];
 
-type Props = {
+interface Props {
   isVisible: boolean;
-};
+}
 
-const KeyBoard = ({ isVisible }: Props) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
+const KeyBoard: FC<Props> = ({ isVisible }) => {
+  const nodeRef = useRef<HTMLDivElement>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setPosition({
-      x: window.innerWidth / 2 - 200,
-      y: window.innerHeight - 100,
-    });
+    setIsClient(true);
   }, []);
 
   const handleKeyClick = (key: string) => {
     const event = new KeyboardEvent("keydown", { key });
-    window.dispatchEvent(event);
+    document.dispatchEvent(event);
   };
 
-  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-    if (typeof window === "undefined") return;
-
-    setDragging(true);
-    const startX =
-      e instanceof MouseEvent
-        ? e.clientX - position.x
-        : (e as any).touches[0].clientX - position.x;
-    const startY =
-      e instanceof MouseEvent
-        ? e.clientY - position.y
-        : (e as any).touches[0].clientY - position.y;
-
-    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
-      const clientX =
-        e instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
-      const clientY =
-        e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
-
-      setPosition({
-        x: clientX - startX,
-        y: clientY - startY,
-      });
-    };
-
-    const handleMouseUp = () => {
-      if (typeof window === "undefined") return;
-      setDragging(false);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("touchmove", handleMouseMove);
-      window.removeEventListener("touchend", handleMouseUp);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-    window.addEventListener("touchmove", handleMouseMove);
-    window.addEventListener("touchend", handleMouseUp);
-  };
+  if (!isClient || !isVisible) return null;
 
   return (
-    <>
+    <Draggable
+      // @ts-ignore
+      nodeRef={nodeRef}
+    >
       <div
-        className="glass group flex justify-center items-center backdrop-blur absolute transition duration-300 ease-in-out"
+        ref={nodeRef}
+        className="glass w-fit group flex justify-center items-center backdrop-blur transition duration-300 ease-in-out"
         style={{
-          left: `${position.x}px`,
-          top: `${position.y}px`,
-          cursor: dragging ? "grabbing" : "grab",
-          display: isVisible ? "block" : "none",
+          cursor: "move",
         }}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleMouseDown}
       >
-        <button className="absolute glass bottom-full w-12 h-12 left-0 !rounded-br-none"></button>
-        <div className="grid grid-cols-4 items-center justify-center gap-2 p-4 max-w-[30rem]">
+        <div className="absolute left-0 top-0 bottom-0 w-2 cursor-grab bg-blue-600"></div>{" "}
+        {/* دستگیره کناری برای جابجایی */}
+        <div className="grid grid-cols-4 items-center justify-center gap-2 p-4 max-w-[30rem] ml-2">
+          {" "}
+          {/* فاصله از دستگیره */}
           {keys.map((key) => (
             <button
               key={key.id}
@@ -126,7 +96,7 @@ const KeyBoard = ({ isVisible }: Props) => {
           ))}
         </div>
       </div>
-    </>
+    </Draggable>
   );
 };
 
