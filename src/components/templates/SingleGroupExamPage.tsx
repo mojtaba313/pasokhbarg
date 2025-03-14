@@ -89,6 +89,7 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
       );
       if (res.data.success) {
         setQuestions(newQuestions);
+        fetchExam();
       }
     } catch (error) {
       console.error("Failed to update questions:", error);
