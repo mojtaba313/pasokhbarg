@@ -3,14 +3,17 @@ import { useEffect, useState } from "react";
 import { getSession, signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import Spinner from "@/components/Spinner";
 
 export default function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const [isFetching, setIsFetching] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setIsFetching(true);
     e.preventDefault();
     setError("");
 
@@ -29,6 +32,7 @@ export default function SignIn() {
       if (isAdmin) router.push("/admin/exams/group");
       else router.push("/exams");
     }
+    setIsFetching(false);
   };
 
   return (
@@ -58,9 +62,15 @@ export default function SignIn() {
             />
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600"
+              disabled={isFetching}
+              className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300/30 disabled:cursor-not-allowed flex justify-center"
             >
-              ورود
+              
+              {isFetching ? (
+                <Spinner style={{ width: 20, height: 20 }} />
+              ) : (
+                "ورود"
+              )}
             </button>
           </div>
         </form>

@@ -9,10 +9,13 @@ import { formatDate } from "@/utils/funcs";
 import {
   ClipboardDocumentListIcon,
   ExclamationCircleIcon,
+  KeyIcon,
   PlayIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Tooltip } from "primereact/tooltip";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 interface Props {
   exam: IntermediateExam;
@@ -24,6 +27,12 @@ const ExamCard = ({ exam, onDelete, onViewedToggle }: Props) => {
   const toast = useRef<Toast>(null);
   const isExamPassed = Boolean(exam.endTime);
   const isStarted = Boolean(exam.startTime);
+  const router = useRouter();
+
+  const hanldeStartExam = async () => {
+    const res = await axios.post(`/api/exams/${exam._id}`);
+    if (res.status === 200) router.push(`/exams/${exam._id}`);
+  };
 
   const header = (
     <div className="glass-effect h-32 relative rounded-lg overflow-hidden">
@@ -100,18 +109,30 @@ const ExamCard = ({ exam, onDelete, onViewedToggle }: Props) => {
             });
           }}
         />
-        <Link href={`/exams/${exam._id}${isExamPassed ? "/result" : ""}`}>
-          <Button
-            icon={
-              isExamPassed ? (
+        {isExamPassed ? (
+          <Link href={`/exams/${exam._id}/result`}>
+            <Button
+              icon={
                 <ClipboardDocumentListIcon
                   width={20}
                   className="text-green-500"
                 />
-              ) : (
-                <PlayIcon width={20} className="text-yellow-500" />
-              )
-            }
+              }
+              rounded
+              severity="secondary"
+            />
+          </Link>
+        ) : (
+          <Button
+            icon={<PlayIcon width={20} className="!text-green-500" />}
+            rounded
+            severity="secondary"
+            onClick={hanldeStartExam}
+          />
+        )}
+        <Link href={`/exams/${exam._id}/add-answers`}>
+          <Button
+            icon={<KeyIcon width={20} className="!text-yellow-500" />}
             rounded
             severity="secondary"
           />

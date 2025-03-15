@@ -12,7 +12,7 @@ import {
 import React, { useState, useEffect } from "react";
 import AnimatedCursor from "react-animated-cursor";
 import KeyBoard from "../KeyBoard";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 const Settings = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,6 +20,8 @@ const Settings = () => {
   const [mouseRipple, setMouseRipple] = useState(true);
   const [isKeyBoardVisible, setIsKeyBoardVisible] = useState(false);
   const [bgEffect, setBgEffect] = useState(true);
+
+  const { data: session } = useSession();
 
   useEffect(() => {
     const isDarkMode =
@@ -94,7 +96,7 @@ const Settings = () => {
 
       {/* پنل تنظیمات */}
       <div
-        className={`fixed z-50 bottom-20 left-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg p-4 space-y-4 transition-all duration-300 ${
+        className={`fixed z-50 bottom-20 left-4 rounded-lg bg-white dark:bg-gray-800 shadow-lg p-4 space-y-4 !transition-all duration-300 ${
           isOpen
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-4 pointer-events-none"
@@ -153,22 +155,35 @@ const Settings = () => {
         >
           <div
             className={`w-5 h-5 rounded-full blur-sm ${
-              bgEffect
-                ? "bg-gray-800 dark:bg-gray-200"
-                : "bg-yellow-400"
+              bgEffect ? "bg-gray-800 dark:bg-gray-200" : "bg-yellow-400"
             }`}
           ></div>
         </button>
-
-        {/* logout */}
-        <button
-          className="flex items-center justify-center w-12 h-12 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors !bg-red-500 text-white hover:!bg-red-600 shadow-lg hover:shadow-red-500/50"
-          onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-          aria-label="Toggle dark mode"
-        >
-          <ArrowLeftStartOnRectangleIcon width={24} />
-        </button>
       </div>
+
+      {/* user name panel */}
+      {session?.user && (
+        <div
+          className={`fixed flex items-center gap-2 z-50 bottom-4 left-20 rounded-lg bg-white dark:bg-gray-800 shadow-lg p-4 space-y-4 !transition-all duration-300 ${
+            isOpen
+              ? "opacity-100 -translate-x-0"
+              : "opacity-0 -translate-x-4 pointer-events-none"
+          }`}
+        >
+          <div className="flex items-center justify-center h-12 px-3 rounded-lg bg-gray-100 dark:bg-gray-700 transition-colors">
+            {session.user.name}
+          </div>
+
+          {/* logout */}
+          <button
+            className="flex !m-0 items-center justify-center w-12 h-12 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors !bg-red-500 text-white hover:!bg-red-600 shadow-lg hover:shadow-red-500/50"
+            onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+            aria-label="sign out"
+          >
+            <ArrowLeftStartOnRectangleIcon width={24} />
+          </button>
+        </div>
+      )}
 
       {mouseRipple ? (
         <AnimatedCursor

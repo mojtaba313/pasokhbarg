@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Spinner from "@/components/Spinner";
 
 export default function SignUp() {
   const [name, setName] = useState("");
@@ -9,8 +10,10 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const [isFetching, setIsFetching] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setIsFetching(true);
     e.preventDefault();
     setError("");
 
@@ -30,6 +33,7 @@ export default function SignUp() {
     } catch (err) {
       setError("خطا در ارتباط با سرور");
     }
+    setIsFetching(false);
   };
 
   return (
@@ -67,9 +71,14 @@ export default function SignUp() {
             />
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600"
+              disabled={isFetching}
+              className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300/30 disabled:cursor-not-allowed flex justify-center"
             >
-              ثبت‌نام
+              {isFetching ? (
+                <Spinner style={{ width: 20, height: 20 }} />
+              ) : (
+                "ثبت‌نام"
+              )}
             </button>
           </div>
         </form>

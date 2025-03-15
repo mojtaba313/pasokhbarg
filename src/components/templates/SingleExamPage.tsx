@@ -9,52 +9,37 @@ import {
 } from "@heroicons/react/24/outline";
 import Timer from "@/components/Timer";
 import QuestionNavigation from "@/components/QuestionNavigation";
-import { IQuestion } from "@/models/Exam";
+import { IQuestion, IntermediateExam } from "@/models/Exam";
 import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
 import KeyBoard from "../KeyBoard";
 import Spinner from "../Spinner";
 
-interface Question {
-  number: number;
-  selectedOption?: number;
-  timeSpent: number;
-}
-
 interface Props {
   examID: string;
 }
 
-type Exam = {
-  startTime: Date;
-  endTime: Date;
-  questions: IQuestion[];
-  id: string;
-};
-
 const SingleExamPage: FC<Props> = ({ examID }) => {
-  const [exam, setExam] = useState<Exam>();
+  const [exam, setExam] = useState<IntermediateExam>();
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
   const router = useRouter();
 
   const fetchExam = async () => {
-    const { data }: { data: Exam } = await axios.get(`/api/exams/${examID}`);
+    const { data }: { data: IntermediateExam } = await axios.get(
+      `/api/exams/${examID}`
+    );
+    if (data.endTime) router.push("/exams");
     setExam(data);
-    console.log('fetch data', data)
   };
 
   useEffect(() => {
     fetchExam();
   }, [examID]);
 
-  useEffect(() => {
-    console.log('exam',exam)
-  }, [exam]);
-
-  const updateExam = async (newData?: Exam) => {
+  const updateExam = async (newData?: IntermediateExam) => {
     setIsFetchingData(true);
     const res = await axios.put(`/api/exams/${examID}`, newData || exam);
     if (res.status === 201) setIsFetchingData(false);
@@ -65,7 +50,6 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
   const handleEndExam = async () => {
     const res = await axios.put(`/api/exams/${examID}`, {
       endTime: new Date(),
-      questions: exam.questions,
     });
 
     if (res.status === 201) router.push("/exams");
@@ -93,7 +77,6 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
     updateExam(newExam);
   };
 
-  
   return (
     <div
       className="min-h-screen w-screen h-screen overflow-hidden transition-colors duration-300"
@@ -110,12 +93,18 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
             بازگشت
           </button>
 
-          <Timer startTime={exam.startTime} endTime={exam.endTime || new Date()} />
+          <Timer
+            startTime={exam.startTime || new Date()}
+            endTime={exam.endTime}
+          />
+
+          <h1 className="text-2xl">{exam.title}</h1>
+
+          <div role="status" className={!isFetchingData ? "invisible" : ""}>
+            <Spinner />
+          </div>
 
           <div className="flex items-center justify-center">
-            <div role="status" className={!isFetchingData ? "invisible" : ""}>
-              <Spinner />
-            </div>
             <button
               onClick={() => setShowConfirmModal(true)}
               className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors shadow-lg hover:shadow-red-500/50"

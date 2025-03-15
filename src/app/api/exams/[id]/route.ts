@@ -22,6 +22,29 @@ export const GET = async (
   }
 };
 
+export const POST = async (
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const id = (await params).id;
+
+  try {
+    await connectDB();
+    const exam = await Exam.findById(id);
+
+    if (!exam.startTime) {
+      exam.startTime = new Date();
+      await exam.save();
+    }
+
+    return new Response(null, { status: 200 });
+  } catch (error: any) {
+    return new Response(JSON.stringify({ message: error.message }), {
+      status: 400,
+    });
+  }
+};
+
 export const PUT = async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -31,32 +54,31 @@ export const PUT = async (
   try {
     await connectDB();
     const exam = await Exam.findById(id);
-    let updates = (await req.json());
+    let updates = await req.json();
 
-    const times = updates.questions.map((q:any) => q.timeSpent);
-    console.log('times',times)
+    // const times = updates.questions.map((q: any) => q.timeSpent);
 
-    if (exam.endTime) {
-      const questions = updates.questions?.map((q: any) => ({
-        ...q,
-        selectedOption: undefined,
-        timeSpent:undefined
-      }));
+    // if (exam.endTime) {
+    //   const questions = updates.questions?.map((q: any) => ({
+    //     ...q,
+    //     selectedOption: undefined,
+    //     timeSpent: undefined,
+    //   }));
 
-      updates = { ...updates, questions };
-    }
+    //   updates = { ...updates, questions };
+    // }
 
     const options = { new: true, runValidators: true };
 
-    const user = await Exam.findByIdAndUpdate(id, updates, options);
+    const editedExam = await Exam.findByIdAndUpdate(id, updates, options);
 
-    if (!user) {
-      return new Response(JSON.stringify({ message: "User not found" }), {
+    if (!editedExam) {
+      return new Response(JSON.stringify({ message: "Exam not found" }), {
         status: 404,
       });
     }
 
-    return new Response(JSON.stringify(user), { status: 201 });
+    return new Response(null, { status: 201 });
   } catch (error: any) {
     return new Response(JSON.stringify({ message: error.message }), {
       status: 400,

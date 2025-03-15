@@ -58,12 +58,12 @@ const KeyBoard: FC<Props> = ({ isVisible }) => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
+    setIsClient(typeof window !== "undefined");
   }, []);
 
   const handleKeyClick = (key: string) => {
     const event = new KeyboardEvent("keydown", { key });
-    document.dispatchEvent(event);
+    window.dispatchEvent(event);
   };
 
   if (!isClient || !isVisible) return null;
@@ -72,6 +72,7 @@ const KeyBoard: FC<Props> = ({ isVisible }) => {
     <Draggable
       // @ts-ignore
       nodeRef={nodeRef}
+      positionOffset={{ x: -100, y: -200 }}
     >
       <div
         ref={nodeRef}
@@ -80,11 +81,8 @@ const KeyBoard: FC<Props> = ({ isVisible }) => {
           cursor: "move",
         }}
       >
-        <div className="absolute left-0 top-0 bottom-0 w-2 cursor-grab bg-blue-600"></div>{" "}
-        {/* دستگیره کناری برای جابجایی */}
-        <div className="grid grid-cols-4 items-center justify-center gap-2 p-4 max-w-[30rem] ml-2">
-          {" "}
-          {/* فاصله از دستگیره */}
+        <div className="absolute left-0 top-0 bottom-0 !w-8 rounded-l-md !cursor-move"></div>{" "}
+        <div className="grid grid-cols-4 items-center justify-center gap-2 p-4 max-w-[30rem] ml-5">
           {keys.map((key) => (
             <button
               key={key.id}

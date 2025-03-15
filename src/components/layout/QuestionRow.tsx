@@ -75,7 +75,8 @@ const QuestionRow = ({
   // }, []);
 
   useEffect(() => {
-    if (isCurrent) window.addEventListener("keydown", handleUserKeyPress);
+    // if (isCurrent) window.addEventListener("keydown", handleUserKeyPress);
+    if (isCurrent) window.addEventListener("keydown", (e)=>console.log('hello',e));
 
     return () => {
       window.removeEventListener("keydown", handleUserKeyPress);
