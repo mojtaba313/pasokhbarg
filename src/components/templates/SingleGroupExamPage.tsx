@@ -101,6 +101,7 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
   };
 
   const onChoose = (number: number, optionNumber: number) => {
+    if(isFetchingData) return;
     if (questions.length === 0) return;
     const newQuestions = questions.map((q) =>
       q.number === number ? { ...q, selectedOption: optionNumber } : q
@@ -109,6 +110,7 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
   };
 
   const onPause = (number: number, addingTime: number) => {
+    if(isFetchingData) return;
     if (!exam) return;
     const newQuestions = questions?.map((q: any) =>
       q.number === number ? { ...q, timeSpent: addingTime } : q
