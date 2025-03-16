@@ -17,10 +17,10 @@ interface Key {
 
 let i = 0;
 const keys: Key[] = [
-  { id: i++, title: "1", key: "1" },
-  { id: i++, title: "2", key: "2" },
-  { id: i++, title: "3", key: "3" },
   { id: i++, title: "4", key: "4" },
+  { id: i++, title: "3", key: "3" },
+  { id: i++, title: "2", key: "2" },
+  { id: i++, title: "1", key: "1" },
   {
     id: i++,
     title: "0",
