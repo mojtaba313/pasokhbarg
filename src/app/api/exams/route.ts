@@ -57,8 +57,8 @@ export async function POST(req: Request) {
     const newTags = title.replace(/\s+/g, " ").trim().split(" ");
 
     newTags.forEach((newTag: string) => {
-      const tagIndex = user.tags.indexOf(newTag);
-      if (tagIndex !== -1) user.tags.splice(tagIndex, 1);
+      const tagIndex = user.examTags.indexOf(newTag);
+      if (tagIndex !== -1) user.examTags.splice(tagIndex, 1);
       user.examTags.push(newTag);
     });
 
