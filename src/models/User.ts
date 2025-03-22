@@ -12,6 +12,7 @@ export interface IUser extends Document {
   managedBy?: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
+  examTags?: string[];
 }
 
 const UserSchema = new Schema<IUser>(
@@ -23,6 +24,7 @@ const UserSchema = new Schema<IUser>(
     permissions: { type: [String], default: [] },
     managedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
     managedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    examTags: { type: [String], default: [] },
   },
   { timestamps: true }
 );

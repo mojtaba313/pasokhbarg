@@ -10,14 +10,12 @@ import { Toast } from "primereact/toast";
 import { IntermediateExam } from "@/models/Exam";
 import ExamCard from "@/components/layout/ExamCard";
 import CreateExamForm from "@/components/CreateExamForm";
-import { PrimeIcons } from "primereact/api";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { Loader } from "@/components/Loader";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
 import GroupExamCard from "@/components/layout/GroupExamCard";
 
 export default function Exams() {
+  const [filteredExams, setfilteredExams] = useState<IntermediateExam[]>([]);
   const [exams, setExams] = useState<IntermediateExam[]>([]);
   const [groupExams, setGroupExams] = useState<IntermediateExam[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -25,11 +23,14 @@ export default function Exams() {
   const toast = useRef<Toast>(null);
   const router = useRouter();
   const session = useSession();
+  const [tags, setTags] = useState<string[]>([]);
+  const [activeTags, setActiveTags] = useState<string[]>([]);
 
   const fetchExams = async () => {
     try {
       const { data } = await axios.get("/api/exams");
-      setExams(data);
+      setExams(data.exams);
+      setTags(data.user.examTags);
     } catch (error) {
       showError("خطا در دریافت اطلاعات آزمون‌ها");
     } finally {
@@ -55,6 +56,19 @@ export default function Exams() {
 
     checkSession();
   }, [session]);
+
+  useEffect(() => {
+    if (!activeTags.length) setfilteredExams(exams);
+    const news = exams.filter((e) =>
+      e.title
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .some((s) => activeTags.includes(s))
+    );
+    setfilteredExams(news);
+    console.log(news)
+  }, [activeTags]);
 
   const handleDeleteExam = async (examId: string) => {
     try {
@@ -104,6 +118,12 @@ export default function Exams() {
     }
   };
 
+  const toggleTagActivation = (tag: string) => {
+    setActiveTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
   if (loading) return <Loader />;
 
   return (
@@ -125,9 +145,26 @@ export default function Exams() {
             />
           </div>
 
+          {/* Tags */}
+          <div className="w-full flex overflow-x-scroll mb-3 gap-1 px-3">
+            {tags.map((t) => (
+              <button
+                key={t}
+                onClick={() => toggleTagActivation(t)}
+                className={`py-1 px-3 mb-1 ${
+                  activeTags.includes(t)
+                    ? "bg-blue-600/30 text-blue-600 font-bold border-transparent"
+                    : "bg-blue-600/10"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
           {/* Exams Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {exams.map((exam) => (
+            {filteredExams.map((exam) => (
               <ExamCard
                 key={exam._id}
                 exam={exam}

@@ -34,6 +34,13 @@
   --container-xs: 25rem;
 }
 
+*::-webkit-scrollbar{
+  @apply bg-white/10 w-2 h-2 rounded-full;
+}
+*::-webkit-scrollbar-thumb{
+  @apply bg-blue-500 rounded-full;
+}
+
 * {
   @apply font-vazir !outline-none transition-colors select-none;
 }

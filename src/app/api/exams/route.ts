@@ -3,11 +3,14 @@ import connectDB from "@/lib/mongodb";
 import Exam from "@/models/Exam";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/auth/authOptions";
+import User from "@/models/User";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const user = await User.findById(session?.user?._id);
+
+    if (!user) {
       return NextResponse.json(
         { message: "احراز هویت نامعتبر" },
         { status: 401 }
@@ -39,9 +42,20 @@ export async function POST(req: Request) {
       startQuestion,
       endQuestion,
       questions,
-      userId: session.user._id,
+      userId: user._id,
       viewed: false,
     });
+
+    if (!user.tags) user.tags = [];
+    const newTags = title.replace(/\s+/g, " ").trim().split(" ");
+
+    newTags.forEach((newTag: string) => {
+      const tagIndex = user.tags.indexOf(newTag);
+      if (tagIndex !== -1) user.tags.splice(tagIndex, 1);
+      user.tags.push(newTag);
+    });
+
+    await user.save();
 
     return NextResponse.json(exam);
   } catch (error) {
@@ -56,6 +70,7 @@ export async function POST(req: Request) {
 export const GET = async () => {
   try {
     const session = await getServerSession(authOptions);
+    const user = await User.findById(session?.user?._id);
 
     if (!session?.user) {
       return NextResponse.json(
@@ -69,7 +84,7 @@ export const GET = async () => {
       createdAt: -1,
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({ exams: result, user });
   } catch (err) {
     console.error("Error fetching exams:", err);
     return NextResponse.json(
