@@ -10,6 +10,13 @@ export async function POST(req: Request) {
     await connectDB();
     
     const session = await getServerSession(authOptions);
+      if (!session?.user?._id) {
+      return NextResponse.json(
+        { message: "احراز هویت نامعتبر" },
+        { status: 401 }
+      );
+    }
+    
     const user = await User.findById(session?.user?._id);
 
     if (!user) {
@@ -72,6 +79,12 @@ export const GET = async () => {
     await connectDB();
     
     const session = await getServerSession(authOptions);
+     if (!session?.user?._id) {
+      return NextResponse.json(
+        { message: "احراز هویت نامعتبر" },
+        { status: 401 }
+      );
+    }
     const user = await User.findById(session?.user?._id);
 
     if (!user) {
