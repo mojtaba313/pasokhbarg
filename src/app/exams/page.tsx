@@ -30,7 +30,7 @@ export default function Exams() {
     try {
       const { data } = await axios.get("/api/exams");
       setExams(data.exams);
-      setTags(data.user.examTags);
+      setTags(data.user.examTags.reverse());
     } catch (error) {
       showError("خطا در دریافت اطلاعات آزمون‌ها");
     } finally {
@@ -58,7 +58,7 @@ export default function Exams() {
   }, [session]);
 
   useEffect(() => {
-    if (!activeTags.length) setfilteredExams(exams);
+    if (!activeTags.length) return setfilteredExams(exams);
     const news = exams.filter((e) =>
       e.title
         .replace(/\s+/g, " ")
