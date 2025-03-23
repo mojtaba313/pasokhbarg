@@ -30,6 +30,7 @@ export default function Exams() {
     try {
       const { data } = await axios.get("/api/exams");
       setExams(data.exams);
+      setfilteredExams(data.exams);
       setTags(data.user.examTags.reverse());
     } catch (error) {
       showError("خطا در دریافت اطلاعات آزمون‌ها");
