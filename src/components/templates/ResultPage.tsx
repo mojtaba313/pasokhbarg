@@ -79,7 +79,7 @@ const ResultPage: FC<Props> = ({ examID }) => {
         </div>
 
         {/* Questions Container */}
-        <div className="flex gap-6 flex-wrap h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
+        <div className="flex pt-6 pb-28 overflow-y-scroll gap-6 flex-wrap justify-center items-center h-[calc(100vh-5rem)]">
           {/* Percent */}
           <div className="border p-7 text-3xl text-green-500 dark:border-slate-700 rounded-lg bg-white/50 dark:bg-gray-800/50 shadow-lg hover:shadow-xl transition-shadow duration-300">
             %{calclulatePercent().toFixed(2)}
