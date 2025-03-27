@@ -27,8 +27,7 @@ const QuestionRow = ({
 }: Props) => {
   const [time, setTime] = useState<number>(question.timeSpent || 0);
   const intervalRef = useRef<number | null>(null);
-
-  // console.log(question.timeSpent)
+  const [now, setNow] = useState<Date>(new Date());
 
   const isCurrent: boolean = question.number === currentQuestion;
 
@@ -69,13 +68,8 @@ const QuestionRow = ({
     }
   };
 
-  // useEffect(() => {
-  //   console.log(question.timeSpent, question)
-  //   if (question.timeSpent) setTime(question.timeSpent);
-  // }, []);
-
   useEffect(() => {
-     if (isCurrent) window.addEventListener("keydown", handleUserKeyPress);
+    if (isCurrent) window.addEventListener("keydown", handleUserKeyPress);
 
     return () => {
       window.removeEventListener("keydown", handleUserKeyPress);
@@ -84,8 +78,11 @@ const QuestionRow = ({
 
   useEffect(() => {
     if (isCurrent) {
+      setNow(new Date());
+      const nowTimeData = new Date();
       intervalRef.current = window.setInterval(() => {
-        setTime((prev) => prev + 1);
+        console.log();
+        setTime((prev) => question.timeSpent + Math.floor((Date.now() - nowTimeData.getTime()) / 1000));
       }, 1000);
     }
 

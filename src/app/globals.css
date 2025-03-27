@@ -1,14 +1,11 @@
-@import "primereact/resources/themes/lara-dark-blue/theme.css" layer(primereact);
+@import "../../node_modules/primereact/resources/themes/lara-dark-blue/theme.css"
+  layer(primereact);
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer tailwind-base, primereact, tailwind-utilities;
-
-/* IMPORTANT: In "styled" mode you must add the PrimeReact Theme here. Do NOT include in "unstyled" mode */
-@import "primereact/resources/themes/lara-light-blue/theme.css"
-  layer(primereact);
 
 @layer tailwind-base {
   @tailwind base;
@@ -34,10 +31,10 @@
   --container-xs: 25rem;
 }
 
-*::-webkit-scrollbar{
+*::-webkit-scrollbar {
   @apply bg-white/10 w-2 h-2 rounded-full;
 }
-*::-webkit-scrollbar-thumb{
+*::-webkit-scrollbar-thumb {
   @apply bg-blue-500 rounded-full;
 }
 
@@ -58,12 +55,12 @@ input {
   @apply dark:bg-slate-800 bg-gray-400 rounded-md px-2 py-1 border-blue-500/70 shadow-md shadow-blue-500/10;
 }
 
-.w-screen{
-  @apply px-2
+.w-screen {
+  @apply px-2;
 }
 
-.h-screen{
-  @apply py-2
+.h-screen {
+  @apply py-2;
 }
 
 .glass {
@@ -96,7 +93,6 @@ input {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .p-dialog,
-.p-component,
 .p-dialog-default,
 .p-ripple-disabled,
 .p-dialog-enter-done {
@@ -104,6 +100,10 @@ input {
   > * {
     @apply !bg-transparent text-white;
   }
+}
+
+.p-inputswitch-slider {
+  @apply !bg-blue-500;
 }
 
 .blob-container {

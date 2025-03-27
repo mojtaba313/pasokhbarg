@@ -57,12 +57,12 @@ const ResultPage: FC<Props> = ({ examID }) => {
 
   return (
     <div
-      className="min-h-screen w-screen h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300"
+      className="min-h-screen w-screen h-screen overflow-hidden transition-colors duration-300"
       dir="ltr"
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="glass-panel bg-white/20 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
+        <div className="glass-panel bg-white/50 dark:!bg-slate-700/50 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
           <button
             onClick={() => router.push("/exams")}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
@@ -89,7 +89,7 @@ const ResultPage: FC<Props> = ({ examID }) => {
               return (
                 <div
                   key={`${i}-`}
-                  className="border dark:border-slate-700 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  className="border dark:border-slate-700 rounded-lg bg-white/30 dark:bg-gray-800/30 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
                   {/* Card Header */}
                   <div className="flex justify-between p-4 border-b dark:border-slate-700">
@@ -121,7 +121,7 @@ const ResultPage: FC<Props> = ({ examID }) => {
             })}
 
           {/* Percent */}
-          <div className="border p-7 text-3xl text-green-500 dark:border-slate-700 rounded-lg bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="border p-7 text-3xl text-green-500 dark:border-slate-700 rounded-lg bg-white/50 dark:bg-gray-800/50 shadow-lg hover:shadow-xl transition-shadow duration-300">
             %{calclulatePercent().toFixed(2)}
           </div>
         </div>

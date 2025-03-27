@@ -1,20 +1,21 @@
 "use client";
-import { useState, useEffect, useCallback, FC } from "react";
+import { useState, useEffect, FC } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
+  AdjustmentsHorizontalIcon,
+  AdjustmentsVerticalIcon,
   ArrowLeftIcon,
   ClockIcon,
   ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import Timer from "@/components/Timer";
-import QuestionNavigation from "@/components/QuestionNavigation";
 import { IQuestion, IntermediateExam } from "@/models/Exam";
 import QuestionRow from "../layout/QuestionRow";
 import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
-import KeyBoard from "../KeyBoard";
 import Spinner from "../Spinner";
+import { InputSwitch } from "primereact/inputswitch";
 
 interface Props {
   examID: string;
@@ -25,6 +26,7 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
+  const [horizentalScroll, setHorizentalScroll] = useState(true);
   const router = useRouter();
 
   const fetchExam = async () => {
@@ -84,7 +86,7 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="glass-panel bg-white/20 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
+        <div className="glass-panel bg-white/50 dark:!bg-slate-700/50 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
           <button
             onClick={() => router.push("/exams")}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
@@ -114,8 +116,26 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
           </div>
         </div>
 
+        {/* Setting options */}
+        <div className="px-5 w-full fle- justify-evenly items-center py-2">
+          <div className="flex gap-1">
+            <AdjustmentsHorizontalIcon width={20} />
+            <InputSwitch
+              checked={horizentalScroll}
+              onChange={(e) => setHorizentalScroll(e.value)}
+            />
+            <AdjustmentsVerticalIcon width={20} />
+          </div>
+        </div>
+
         {/* Questions Container */}
-        <div className="flex pb-32 pl-5 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20">
+        <div
+          className={`flex pb-28 px-3 gap-6 overflow-x-auto h-[calc(100vh-5rem)] items-start ${
+            horizentalScroll
+              ? "overflow-x-hidden flex-wrap justify-center items-center"
+              : ""
+          }`}
+        >
           {Array(Math.ceil(exam.questions?.length / 10 || 0))
             .fill(0)
             .map((_, i) => (

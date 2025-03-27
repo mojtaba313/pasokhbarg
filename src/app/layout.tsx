@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fa" dir="rtl">
-      <body className={`antialiased bg-slate-800`}>
+      <body className={`antialiased bg-gray-100 dark:bg-slate-800`}>
         <Providers>
           <div className="w-full h-full z-10">
             {children}
