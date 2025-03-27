@@ -81,7 +81,7 @@ const ResultPage: FC<Props> = ({ examID }) => {
         {/* Questions Container */}
         <div className="flex pt-6 pb-28 overflow-y-scroll gap-6 flex-wrap justify-center items-center h-[calc(100vh-5rem)]">
           {/* Percent */}
-          <div className="w-full flex-1">
+          <div className="w-full">
             <div className="border p-7 text-3xl text-green-500 dark:border-slate-700 rounded-lg bg-white/50 dark:bg-gray-800/50 shadow-lg hover:shadow-xl transition-shadow duration-300">
               %{calclulatePercent().toFixed(2)}
             </div>
