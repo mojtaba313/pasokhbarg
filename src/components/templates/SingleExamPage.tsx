@@ -88,7 +88,7 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
         {/* Header */}
         <div className="glass-panel bg-white/50 dark:!bg-slate-700/50 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
           <button
-            onClick={() => router.push("/exams")}
+            onClick={() => router.back()}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
           >
             <ArrowLeftIcon className="w-5 h-5" />

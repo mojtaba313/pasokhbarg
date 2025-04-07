@@ -101,7 +101,7 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
   };
 
   const onChoose = (number: number, optionNumber: number) => {
-    if(isFetchingData) return;
+    if (isFetchingData) return;
     if (questions.length === 0) return;
     const newQuestions = questions.map((q) =>
       q.number === number ? { ...q, selectedOption: optionNumber } : q
@@ -110,7 +110,7 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
   };
 
   const onPause = (number: number, addingTime: number) => {
-    if(isFetchingData) return;
+    if (isFetchingData) return;
     if (!exam) return;
     const newQuestions = questions?.map((q: any) =>
       q.number === number ? { ...q, timeSpent: addingTime } : q
@@ -129,7 +129,7 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
         {/* Header */}
         <div className="glass-panel bg-white/20 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
           <button
-            onClick={() => router.push("/exams")}
+            onClick={() => router.back()}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
           >
             <ArrowLeftIcon className="w-5 h-5" />
