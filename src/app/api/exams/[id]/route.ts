@@ -54,31 +54,60 @@ export const PUT = async (
   try {
     await connectDB();
     const exam = await Exam.findById(id);
-    let updates = await req.json();
-
-    // const times = updates.questions.map((q: any) => q.timeSpent);
-
-    // if (exam.endTime) {
-    //   const questions = updates.questions?.map((q: any) => ({
-    //     ...q,
-    //     selectedOption: undefined,
-    //     timeSpent: undefined,
-    //   }));
-
-    //   updates = { ...updates, questions };
-    // }
-
-    const options = { new: true, runValidators: true };
-
-    const editedExam = await Exam.findByIdAndUpdate(id, updates, options);
-
-    if (!editedExam) {
+    
+    if (!exam) {
       return new Response(JSON.stringify({ message: "Exam not found" }), {
         status: 404,
       });
     }
 
-    return new Response(null, { status: 201 });
+    const updates = await req.json();
+
+
+    if (updates.questions) {
+      const validatedQuestions = updates.questions.map((q: any) => {
+        if (q.analysis) {
+          const validAnalysis: Record<string, any> = {};
+          
+          if (typeof q.analysis.chapter === 'string') {
+            validAnalysis.chapter = q.analysis.chapter.trim();
+          }
+          
+          if (typeof q.analysis.topic === 'string') {
+            validAnalysis.topic = q.analysis.topic.trim();
+          }
+          
+          if (typeof q.analysis.description === 'string') {
+            validAnalysis.description = q.analysis.description.trim();
+          }
+          
+          return {
+            ...q,
+            analysis: Object.keys(validAnalysis).length > 0 ? validAnalysis : undefined
+          };
+        }
+        return q;
+      });
+
+      console.log(id)
+
+      updates.questions = validatedQuestions;
+    }
+
+    const updateFields: Record<string, any> = {};
+    
+    if (updates.questions) {
+      updateFields.questions = updates.questions;
+    }
+    
+    if (typeof updates.viewed === 'boolean') {
+      updateFields.viewed = updates.viewed;
+    }
+
+    const options = { new: true, runValidators: true };
+    const editedExam = await Exam.findByIdAndUpdate(id, { $set: updateFields }, options);
+
+    return new Response(JSON.stringify(editedExam), { status: 200 });
   } catch (error: any) {
     return new Response(JSON.stringify({ message: error.message }), {
       status: 400,

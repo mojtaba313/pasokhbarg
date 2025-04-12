@@ -14,7 +14,6 @@ import { Loader } from "@/components/Loader";
 import GroupExamCard from "@/components/layout/GroupExamCard";
 import { InputSwitch } from "primereact/inputswitch";
 
-// کامپوننت اصلی که از useSearchParams استفاده می‌کند
 function ExamsContent() {
   const [exams, setExams] = useState<IntermediateExam[]>([]);
   const [groupExams, setGroupExams] = useState<IntermediateExam[]>([]);
@@ -62,7 +61,6 @@ function ExamsContent() {
   }, [session]);
 
   const filteredExams = useMemo(() => {
-    console.log(tagsFromUrl);
     if (!tagsFromUrl.length || !tagsFromUrl.join("")) {
       return exams;
     }
@@ -249,7 +247,7 @@ function ExamsContent() {
   );
 }
 
-// کامپوننت اصلی که Suspense boundary را پیاده‌سازی می‌کند
+
 export default function Exams() {
   return (
     <Suspense fallback={<Loader />}>

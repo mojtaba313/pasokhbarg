@@ -55,6 +55,10 @@ input {
   @apply dark:bg-slate-800 bg-gray-400 rounded-md px-2 py-1 border-blue-500/70 shadow-md shadow-blue-500/10;
 }
 
+td{
+  @apply text-slate-900 dark:text-white;
+}
+
 .w-screen {
   @apply px-2;
 }
@@ -78,6 +82,12 @@ input {
 
 .p-tag.p-tag-success {
   background: #059669 !important;
+}
+.p-component {
+  @apply dark:!bg-slate-800 *:bg-transparent;
+}
+.p-tooltip-text {
+  @apply !bg-transparent;
 }
 
 .glass-effect {

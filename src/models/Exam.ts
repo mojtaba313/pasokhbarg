@@ -1,12 +1,19 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export interface IQuestionAnalysis {
+  chapter?: string;
+  topic?: string;
+  description?: string;
+}
+
 export interface IQuestion {
   number: number;
   selectedOption?: number;
   timeSpent: number;
   answer: number;
   isSaving?: boolean;
-  createdAt?:Date;
+  createdAt?: Date;
+  analysis?: IQuestionAnalysis;
 }
 
 export interface IExam extends Document {
@@ -18,7 +25,7 @@ export interface IExam extends Document {
   endTime?: Date;
   userId?: string;
   viewed: boolean;
-  createdAt?:Date;
+  createdAt?: Date;
 }
 
 export interface IntermediateExam {
@@ -31,7 +38,7 @@ export interface IntermediateExam {
   endTime?: Date;
   userId?: string;
   viewed: boolean;
-  createdAt?:Date;
+  createdAt?: Date;
 }
 
 const ExamSchema = new Schema<IExam>(
@@ -45,6 +52,11 @@ const ExamSchema = new Schema<IExam>(
         selectedOption: Number,
         answer: Number,
         timeSpent: { type: Number, default: 0 },
+        analysis: {
+          chapter: String,
+          topic: String,
+          description: String,
+        },
       },
     ],
     startTime: Date,
