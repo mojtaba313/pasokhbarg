@@ -163,3 +163,9 @@ input {
     transform: translate(10%, 50%) rotateY(10deg) scale(0.8);
   }
 }
+
+@keyframes glowAnim {
+  to {
+    --a: 1turn;
+  }
+}

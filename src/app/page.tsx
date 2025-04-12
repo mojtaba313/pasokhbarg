@@ -1,7 +1,10 @@
 "use client";
+import GlowImageBox from "@/components/layout/GlowImageBox";
 import { feachers } from "@/constants/homePageConsts";
+import { ArrowLongRightIcon } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { Button } from "primereact/button";
 
 const Home = () => {
   return (
@@ -33,6 +36,22 @@ const Home = () => {
                 </div>
               </div>
             </motion.div>
+
+            {/* <motion.div>
+              <section className="flex justify-center items-center mt-10 animate-bounce ">
+                <GlowImageBox className="group scale-100 hover:scale-[2] !transition-transform">
+                  <Button className="bg-slate-900 !p-3 text-2xl">
+                    <Link href='/timer' className="flex gap-7">
+                      <ArrowLongRightIcon
+                        width={32}
+                        className="-translate-x-1 group-hover:translate-x-1 transition-transform"
+                      />
+                      تایمر
+                    </Link>
+                  </Button>
+                </GlowImageBox>
+              </section>
+            </motion.div> */}
 
             <div className="grid md:grid-cols-3 gap-8 mt-24">
               {feachers.map((feature, idx) => (

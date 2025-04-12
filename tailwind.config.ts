@@ -27,6 +27,17 @@ export default {
       cursor: {
         default: `url(/svg/pen.svg),default`,
       },
+      gridTemplateColumns: {
+        "auto-fit": "repeat(auto-fit, min(100%, 15em))",
+      },
+      animation: {
+        "spin-slow": "spin 4s linear infinite",
+      },
+      backgroundImage: {
+        "gradient-conic":
+          "conic-gradient(#ff4545, #00ff99, #006aff, #ff0095, #ff4545)",
+      },
+      
     },
   },
   plugins: [],
