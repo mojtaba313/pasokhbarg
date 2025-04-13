@@ -33,7 +33,7 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
     const { data }: { data: IntermediateExam } = await axios.get(
       `/api/exams/${examID}`
     );
-    if (data.endTime) router.push("/exams");
+    if (data.endTime) router.back();
     setExam(data);
   };
 
@@ -54,7 +54,7 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
       endTime: new Date(),
     });
 
-    if (res.status === 201) router.push("/exams");
+    if (res.status === 201) router.back();
   };
 
   const onPause = (number: number, addingTime: number) => {

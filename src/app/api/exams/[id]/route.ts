@@ -89,8 +89,6 @@ export const PUT = async (
         return q;
       });
 
-      console.log(id)
-
       updates.questions = validatedQuestions;
     }
 
@@ -98,6 +96,10 @@ export const PUT = async (
     
     if (updates.questions) {
       updateFields.questions = updates.questions;
+    }
+
+    if (updates.endTime) {
+      updateFields.endTime = updates.endTime;
     }
     
     if (typeof updates.viewed === 'boolean') {
@@ -107,7 +109,7 @@ export const PUT = async (
     const options = { new: true, runValidators: true };
     const editedExam = await Exam.findByIdAndUpdate(id, { $set: updateFields }, options);
 
-    return new Response(JSON.stringify(editedExam), { status: 200 });
+    return new Response(JSON.stringify(editedExam), { status: 201 });
   } catch (error: any) {
     return new Response(JSON.stringify({ message: error.message }), {
       status: 400,
