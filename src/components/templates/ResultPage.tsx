@@ -28,7 +28,7 @@ const ResultPage: FC<Props> = ({ examID }) => {
     null
   );
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
-  const [isAnlisSaving, setIsAnlisSaving] = useState(true);
+  const [isAnlisSaving, setIsAnlisSaving] = useState(false);
   const [chapters, setChapters] = useState<string[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
   const [chapterSummary, setChapterSummary] = useState<any[]>([]);
@@ -132,6 +132,7 @@ const ResultPage: FC<Props> = ({ examID }) => {
   const handleSaveAnalysis = async (analysis: IQuestionAnalysis) => {
     if (!selectedQuestion || !exam) return;
 
+    setIsAnlisSaving(true);
     try {
       const updatedQuestions = exam.questions.map((q) =>
         q.number === selectedQuestion.number ? { ...q, analysis } : q
@@ -154,6 +155,8 @@ const ResultPage: FC<Props> = ({ examID }) => {
         detail: "ذخیره تحلیل با خطا مواجه شد",
         life: 3000,
       });
+    }finally{
+      setIsAnlisSaving(false)
     }
   };
 
