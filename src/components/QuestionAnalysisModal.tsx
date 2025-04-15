@@ -5,6 +5,7 @@ import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { AutoComplete } from "primereact/autocomplete";
 import { IQuestion, IQuestionAnalysis } from "@/models/Exam";
+import { Loader } from "./Loader";
 
 interface QuestionAnalysisModalProps {
   question: IQuestion;
@@ -13,6 +14,7 @@ interface QuestionAnalysisModalProps {
   onSave: (analysis: IQuestionAnalysis) => void;
   chapters: string[];
   topics: string[];
+  isLoading: boolean;
 }
 
 export default function QuestionAnalysisModal({
@@ -22,6 +24,7 @@ export default function QuestionAnalysisModal({
   onSave,
   chapters,
   topics,
+  isLoading,
 }: QuestionAnalysisModalProps) {
   const [analysis, setAnalysis] = useState<IQuestionAnalysis>(
     question.analysis || {}
@@ -55,66 +58,69 @@ export default function QuestionAnalysisModal({
 
   return (
     <Dialog
-    header={`تحلیل سوال ${question.number}`}
+      header={`تحلیل سوال ${question.number}`}
       visible={visible}
       style={{ width: "90vw", maxWidth: "500px" }}
       onHide={onHide}
       className="glass-panel *:!text-gray-200 overflow-hidden"
     >
-      <div className="flex flex-col gap-4">
-        <div>
-          <label className="block mb-2">فصل</label>
-          <AutoComplete
-            value={analysis.chapter || ""}
-            suggestions={filteredChapters}
-            completeMethod={searchChapters}
-            onChange={(e) => setAnalysis({ ...analysis, chapter: e.value })}
-            placeholder="فصل مربوطه را انتخاب کنید"
-            className="w-full"
-          />
-        </div>
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="block mb-2">فصل</label>
+            <AutoComplete
+              value={analysis.chapter || ""}
+              suggestions={filteredChapters}
+              completeMethod={searchChapters}
+              onChange={(e) => setAnalysis({ ...analysis, chapter: e.value })}
+              placeholder="فصل مربوطه را انتخاب کنید"
+              className="w-full"
+            />
+          </div>
 
-        <div>
-          <label className="block mb-2">مبحث</label>
-          <AutoComplete
-            value={analysis.topic || ""}
-            suggestions={filteredTopics}
-            completeMethod={searchTopics}
-            onChange={(e) => setAnalysis({ ...analysis, topic: e.value })}
-            placeholder="مبحث مربوطه را انتخاب کنید"
-            className="w-full"
-          />
-        </div>
+          <div>
+            <label className="block mb-2">مبحث</label>
+            <AutoComplete
+              value={analysis.topic || ""}
+              suggestions={filteredTopics}
+              completeMethod={searchTopics}
+              onChange={(e) => setAnalysis({ ...analysis, topic: e.value })}
+              placeholder="مبحث مربوطه را انتخاب کنید"
+              className="w-full"
+            />
+          </div>
 
-        <div>
-          <label className="block mb-2">توضیحات</label>
-          <textarea
-            value={analysis.description || ""}
-            onChange={(e) =>
-              setAnalysis({ ...analysis, description: e.target.value })
-            }
-            placeholder="توضیحات اضافه..."
-            className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-            rows={3}
-          />
-        </div>
+          <div>
+            <label className="block mb-2">توضیحات</label>
+            <textarea
+              value={analysis.description || ""}
+              onChange={(e) =>
+                setAnalysis({ ...analysis, description: e.target.value })
+              }
+              placeholder="توضیحات اضافه..."
+              className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+              rows={3}
+            />
+          </div>
 
-        <div className="flex justify-end gap-2">
-          <Button
-            label="ذخیره"
-            className="!bg-blue-600 !border-0"
-            onClick={() => {
-              onSave(analysis);
-              onHide();
-            }}
-          />
-          <Button
-            label="انصراف"
-            className="!bg-gray-600 !border-0"
-            onClick={onHide}
-          />
+          <div className="flex justify-end gap-2">
+            <Button
+              label="ذخیره"
+              className="!bg-blue-600 !border-0"
+              onClick={() => {
+                onSave(analysis);
+              }}
+            />
+            <Button
+              label="انصراف"
+              className="!bg-gray-600 !border-0"
+              onClick={onHide}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </Dialog>
   );
 }

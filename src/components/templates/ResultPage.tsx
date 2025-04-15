@@ -28,6 +28,7 @@ const ResultPage: FC<Props> = ({ examID }) => {
     null
   );
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [isAnlisSaving, setIsAnlisSaving] = useState(true);
   const [chapters, setChapters] = useState<string[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
   const [chapterSummary, setChapterSummary] = useState<any[]>([]);
@@ -143,6 +144,9 @@ const ResultPage: FC<Props> = ({ examID }) => {
       setExam({ ...exam, questions: updatedQuestions });
       extractChaptersAndTopics({ ...exam, questions: updatedQuestions });
       calculateChapterSummary({ ...exam, questions: updatedQuestions });
+      
+      const nextQuestion = getNextQuestion(selectedQuestion.number);
+      if(nextQuestion) openAnalysisModal(nextQuestion);
     } catch (error) {
       toast.current?.show({
         severity: "error",
@@ -157,6 +161,9 @@ const ResultPage: FC<Props> = ({ examID }) => {
     setSelectedQuestion(question);
     setShowAnalysisModal(true);
   };
+
+  const getNextQuestion = (currentQuestionNumber: number) =>
+    exam?.questions.find((q) => q.number === currentQuestionNumber + 1);
 
   if (!exam) return <Loader />;
 
@@ -321,6 +328,7 @@ const ResultPage: FC<Props> = ({ examID }) => {
           onSave={handleSaveAnalysis}
           chapters={chapters}
           topics={topics}
+          isLoading={isAnlisSaving}
         />
       )}
     </div>
