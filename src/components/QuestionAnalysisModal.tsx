@@ -55,7 +55,7 @@ export default function QuestionAnalysisModal({
 
   return (
     <Dialog
-      header="تحلیل سوال"
+    header={`تحلیل سوال ${question.number}`}
       visible={visible}
       style={{ width: "90vw", maxWidth: "500px" }}
       onHide={onHide}
