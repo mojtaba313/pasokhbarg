@@ -17,6 +17,8 @@ import QuestionAnalysisModal from "../QuestionAnalysisModal";
 import ChapterSummaryTable from "../ChapterSummaryTable";
 import { Toast } from "primereact/toast";
 import { Tooltip } from "primereact/tooltip";
+import { Button } from "primereact/button";
+import ExportModal from "../ExportModal";
 
 interface Props {
   examID: string;
@@ -27,6 +29,8 @@ const ResultPage: FC<Props> = ({ examID }) => {
   const [selectedQuestion, setSelectedQuestion] = useState<IQuestion | null>(
     null
   );
+  const [showDetails, setshowDetails] = useState(false);
+  const [showExportModal, setshowExportModal] = useState(false);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [isAnlisSaving, setIsAnlisSaving] = useState(false);
   const [chapters, setChapters] = useState<string[]>([]);
@@ -145,9 +149,9 @@ const ResultPage: FC<Props> = ({ examID }) => {
       setExam({ ...exam, questions: updatedQuestions });
       extractChaptersAndTopics({ ...exam, questions: updatedQuestions });
       calculateChapterSummary({ ...exam, questions: updatedQuestions });
-      
+
       const nextQuestion = getNextQuestion(selectedQuestion.number);
-      if(nextQuestion) openAnalysisModal(nextQuestion);
+      if (nextQuestion) openAnalysisModal(nextQuestion);
     } catch (error) {
       toast.current?.show({
         severity: "error",
@@ -155,8 +159,8 @@ const ResultPage: FC<Props> = ({ examID }) => {
         detail: "ذخیره تحلیل با خطا مواجه شد",
         life: 3000,
       });
-    }finally{
-      setIsAnlisSaving(false)
+    } finally {
+      setIsAnlisSaving(false);
     }
   };
 
@@ -168,15 +172,73 @@ const ResultPage: FC<Props> = ({ examID }) => {
   const getNextQuestion = (currentQuestionNumber: number) =>
     exam?.questions.find((q) => q.number === currentQuestionNumber + 1);
 
+  const getTooltipContent = (question: IQuestion) => {
+    const chapterStats = chapterSummary.find(
+      (c) => c.chapter === question.analysis?.chapter
+    );
+
+    return (
+      <div className="text-xs p-2 space-y-1 min-w-[200px]">
+        <div className="text-slate-800 dark:!text-white text-center">
+          {question.analysis?.chapter || "ثبت نشده"}
+        </div>
+
+        {question.analysis?.topic && (
+          <div className="text-slate-800 dark:!text-white text-center">
+            {question.analysis.topic}
+          </div>
+        )}
+
+        {chapterStats && (
+          <>
+            <div className="border-t my-1"></div>
+            <div className="flex justify-between text-green-600">
+              <span>صحیح:</span>
+              <span>{chapterStats.correct}</span>
+            </div>
+            <div className="flex justify-between text-red-600">
+              <span>غلط:</span>
+              <span>{chapterStats.incorrect}</span>
+            </div>
+            <div className="flex justify-between text-gray-500">
+              <span>نزده:</span>
+              <span>{chapterStats.unanswered}</span>
+            </div>
+            <div className="flex justify-between text-blue-600">
+              <span>درصد:</span>
+              <span>
+                {claculatePercent(
+                  chapterStats.correct,
+                  chapterStats.incorrect,
+                  chapterStats.unanswered
+                ).toFixed(2)}
+                %
+              </span>
+            </div>
+          </>
+        )}
+
+        {question.analysis?.description && (
+          <>
+            <div className="border-t my-1"></div>
+            <div className="line-clamp-3 text-slate-800 dark:!text-white text-center">
+              {question.analysis.description}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
   if (!exam) return <Loader />;
 
   return (
     <div
-      className="min-h-screen w-screen h-screen overflow-hidden transition-colors duration-300"
+      className=" min-h-screen w-screen h-screen overflow-hidden transition-colors duration-300"
       dir="ltr"
     >
       <Toast ref={toast} position="top-left" />
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto print:!overflow-visible">
         {/* Header */}
         <div className="glass-panel bg-white/50 dark:!bg-slate-700/50 mt-2 hidden xs:flex items-center justify-between p-8 h-20 shadow-sm">
           <button
@@ -198,8 +260,22 @@ const ResultPage: FC<Props> = ({ examID }) => {
         <div className="flex pt-6 pb-28 overflow-y-scroll gap-6 flex-wrap justify-center items-center h-[calc(100vh-5rem)]">
           {/* Percent */}
           <div className="w-full">
-            <div className="border p-7 text-3xl text-green-500 dark:border-slate-700 rounded-lg bg-white/50 dark:bg-gray-800/50 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              %{reduceFinalPercent().toFixed(2)}
+            <div className="border flex justify-evenly p-7 text-3xl text-green-500 dark:border-slate-700 rounded-lg bg-white/50 dark:bg-gray-800/50 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <Button
+                severity="info"
+                onClick={() => setshowExportModal(true)}
+                className="!bg-green-500 !text-white px-8 py-3 rounded-lg hover:!bg-green-600 transition-colors text-lg"
+              >
+                خروجی
+              </Button>
+              <span>%{reduceFinalPercent().toFixed(2)}</span>
+              <Button
+                severity="info"
+                onClick={() => setshowDetails((prev) => !prev)}
+                className="!bg-green-500 !text-white px-8 py-3 rounded-lg hover:!bg-green-600 transition-colors text-lg"
+              >
+                جزئیات
+              </Button>
             </div>
           </div>
 
@@ -233,72 +309,19 @@ const ResultPage: FC<Props> = ({ examID }) => {
                   <div className="flex flex-col p-4 space-y-3">
                     {exam.questions
                       .slice(10 * i, 10 * i + 10)
-                      .map((question, j) => {
-                        const chapterStats = chapterSummary.find(
-                          (c) => c.chapter === question.analysis?.chapter
-                        );
-
-                        return (
-                          <div
-                            key={`${i}-${j}`}
-                            className="flex items-center group"
-                            id={`question${question.number}`}
-                          >
+                      .map((question, j) => (
+                        <div
+                          key={`${i}-${j}`}
+                          id={`question${question.number}`}
+                        >
+                          <div className="flex items-center group">
                             <Tooltip
                               id={`tooltip-${question.number}`}
                               className="!bg-transparent glass-effect rounded-md"
                               target={`#question${question.number}`}
                               mouseTrack
                             >
-                              <div className="text-xs p-2 space-y-1 min-w-[200px]">
-                                <div className="flex justify-between text-slate-800 dark:!text-white">
-                                  {question.analysis?.chapter || "ثبت نشده"}
-                                </div>
-
-                                {question.analysis?.topic && (
-                                  <div className="flex justify-between text-slate-800 dark:!text-white">
-                                    {question.analysis.topic}
-                                  </div>
-                                )}
-
-                                {chapterStats && (
-                                  <>
-                                    <div className="border-t my-1"></div>
-                                    <div className="flex justify-between text-green-600">
-                                      <span>صحیح:</span>
-                                      <span>{chapterStats.correct}</span>
-                                    </div>
-                                    <div className="flex justify-between text-red-600">
-                                      <span>غلط:</span>
-                                      <span>{chapterStats.incorrect}</span>
-                                    </div>
-                                    <div className="flex justify-between text-gray-500">
-                                      <span>نزده:</span>
-                                      <span>{chapterStats.unanswered}</span>
-                                    </div>
-                                    <div className="flex justify-between text-blue-600">
-                                      <span>درصد:</span>
-                                      <span>
-                                        {claculatePercent(
-                                          chapterStats.correct,
-                                          chapterStats.incorrect,
-                                          chapterStats.unanswered
-                                        ).toFixed(2)}
-                                        %
-                                      </span>
-                                    </div>
-                                  </>
-                                )}
-
-                                {question.analysis?.description && (
-                                  <>
-                                    <div className="border-t my-1"></div>
-                                    <div className="line-clamp-3 text-slate-800 dark:!text-white">
-                                      {question.analysis.description}
-                                    </div>
-                                  </>
-                                )}
-                              </div>
+                              {getTooltipContent(question)}
                             </Tooltip>
                             <ExamResultQuestionRow question={question} />
                             <button
@@ -308,8 +331,13 @@ const ResultPage: FC<Props> = ({ examID }) => {
                               <PencilSquareIcon className="w-5 h-5" />
                             </button>
                           </div>
-                        );
-                      })}
+                          {showDetails && (
+                            <div className="border-b-2 border-black/20">
+                              {getTooltipContent(question)}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                   </div>
                 </div>
               );
@@ -324,16 +352,24 @@ const ResultPage: FC<Props> = ({ examID }) => {
 
       {/* Analysis Modal */}
       {selectedQuestion && (
-        <QuestionAnalysisModal
-          question={selectedQuestion}
-          visible={showAnalysisModal}
-          onHide={() => setShowAnalysisModal(false)}
-          onSave={handleSaveAnalysis}
-          chapters={chapters}
-          topics={topics}
-          isLoading={isAnlisSaving}
-        />
+        <>
+          <QuestionAnalysisModal
+            question={selectedQuestion}
+            visible={showAnalysisModal}
+            onHide={() => setShowAnalysisModal(false)}
+            onSave={handleSaveAnalysis}
+            chapters={chapters}
+            topics={topics}
+            isLoading={isAnlisSaving}
+          />
+        </>
       )}
+
+      <ExportModal
+        onHide={() => setshowExportModal(false)}
+        visible={showExportModal}
+        exam={exam}
+      />
     </div>
   );
 };

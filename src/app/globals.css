@@ -39,12 +39,56 @@
 }
 
 * {
-  @apply font-vazir !outline-none transition-colors select-none;
+  @apply font-vazir !outline-none transition-colors select-none print:visible;
 }
 
 body {
-  @apply text-slate-950 dark:text-white;
+  @apply text-slate-950 dark:text-white bg-gray-100 dark:!bg-slate-800 print:w-full print:max-w-none break-before-avoid;
   cursor: url("../../public/svg/pen.svg"), auto;
+}
+.dark body > * {
+  @apply print:!bg-slate-800;
+}
+@media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact;
+  }
+  html, body {
+    width: 100vw;
+    height: auto;
+    overflow: visible !important;
+  }
+
+  * {
+    /* overflow: visible !important; */
+    page-break-before: auto;
+    page-break-after: always; /* محتوای بعدی را به صفحه جدید منتقل می‌کند */
+    /* page-break-inside: avoid; جلوگیری از نصف شدن محتوا در صفحه */
+  }
+}
+
+@media print {
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  div, section {
+    page-break-inside: avoid; /* مانع نصف شدن محتوا */
+  }
+
+  .large-content {
+    page-break-before: auto;
+    page-break-after: always; /* فقط محتواهای بلند را بشکند */
+  }
+}
+
+
+
+@page {
+  size: auto;
+  margin: 0;
 }
 
 button {
@@ -55,7 +99,7 @@ input {
   @apply dark:bg-slate-800 bg-gray-400 rounded-md px-2 py-1 border-blue-500/70 shadow-md shadow-blue-500/10;
 }
 
-td{
+td {
   @apply text-slate-900 dark:text-white;
 }
 
