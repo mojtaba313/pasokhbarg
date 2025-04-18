@@ -31,7 +31,7 @@ export default function QuestionAnalysisModal({
   );
   const [filteredChapters, setFilteredChapters] = useState<string[]>(chapters);
   const [filteredTopics, setFilteredTopics] = useState<string[]>(topics);
-  const firstInput = useRef<any>();
+  const firstInput = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
     if (question.analysis) {
