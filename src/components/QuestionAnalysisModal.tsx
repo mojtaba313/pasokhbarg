@@ -41,9 +41,13 @@ export default function QuestionAnalysisModal({
     }
   }, [question]);
 
-    useEffect(() => {
-    if(visible) firstInput.current?.focus();
-  }, [visible]);
+useEffect(() => {
+  if (visible) {
+    setTimeout(() => {
+      firstInput.current?.focus();
+    }, 100);
+  }
+}, [visible]);
 
   const searchChapters = (event: { query: string }) => {
     setFilteredChapters(
@@ -82,7 +86,6 @@ export default function QuestionAnalysisModal({
               onChange={(e) => setAnalysis({ ...analysis, chapter: e.value })}
               placeholder="فصل مربوطه را انتخاب کنید"
               className="w-full"
-              autoFocus
               ref={firstInput}
             />
           </div>
