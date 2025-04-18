@@ -47,7 +47,7 @@ useEffect(() => {
       firstInput.current?.focus();
     }, 100);
   }
-}, [visible]);
+}, [visible,question]);
 
   const searchChapters = (event: { query: string }) => {
     setFilteredChapters(
