@@ -77,6 +77,7 @@ export default function QuestionAnalysisModal({
               onChange={(e) => setAnalysis({ ...analysis, chapter: e.value })}
               placeholder="فصل مربوطه را انتخاب کنید"
               className="w-full"
+              autoFocus
             />
           </div>
 
