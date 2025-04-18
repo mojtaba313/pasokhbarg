@@ -1,6 +1,6 @@
 // components/QuestionAnalysisModal.tsx
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { AutoComplete } from "primereact/autocomplete";
@@ -31,7 +31,8 @@ export default function QuestionAnalysisModal({
   );
   const [filteredChapters, setFilteredChapters] = useState<string[]>(chapters);
   const [filteredTopics, setFilteredTopics] = useState<string[]>(topics);
-
+  const firstInput = useRef<any>();
+  
   useEffect(() => {
     if (question.analysis) {
       setAnalysis(question.analysis);
@@ -39,6 +40,10 @@ export default function QuestionAnalysisModal({
       setAnalysis({});
     }
   }, [question]);
+
+    useEffect(() => {
+    if(visible) firstInput.current?.focus();
+  }, [visible]);
 
   const searchChapters = (event: { query: string }) => {
     setFilteredChapters(
@@ -78,6 +83,7 @@ export default function QuestionAnalysisModal({
               placeholder="فصل مربوطه را انتخاب کنید"
               className="w-full"
               autoFocus
+              ref={firstInput}
             />
           </div>
 
