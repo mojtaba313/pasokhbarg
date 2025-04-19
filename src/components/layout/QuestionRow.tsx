@@ -58,7 +58,7 @@ const QuestionRow = ({
       e.preventDefault();
     if (["1", "2", "3", "4"].includes(key)) {
       onChoose(question.number, Number(key));
-      setCurrentQuestion((prev) => prev + 1);
+      // setCurrentQuestion((prev) => prev + 1);
     } else if (["ArrowDown", "Enter", "ArrowRight"].includes(key)) {
       setCurrentQuestion((prev) => prev + 1);
     } else if (["ArrowUp", "ArrowLeft"].includes(key)) {

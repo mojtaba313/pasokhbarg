@@ -75,7 +75,7 @@ const SingleExamPage: FC<Props> = ({ examID }) => {
         q.number === number ? { ...q, selectedOption: optionNumber } : q
       ),
     };
-    setCurrentQuestion((prev) => prev + 1);
+    setCurrentQuestion((prev) => (prev === number ? prev + 1 : prev));
     setExam(newExam);
     updateExam(newExam);
   };
