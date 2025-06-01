@@ -8,9 +8,10 @@ import CreateGroupExamForm from "@/components/admin/CreateGroupExamForm";
 import axios from "axios";
 import { IGroupExam } from "@/models/GroupExam";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
-import { ExclamationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ArrowLongLeftIcon, ClipboardDocumentCheckIcon, ExclamationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Loader } from "@/components/Loader";
 import { foramttHour } from "@/utils/funcs";
+import Link from "next/link";
 
 export default function GroupExamsPage() {
   const [exams, setExams] = useState<IGroupExam[]>([]);
@@ -43,12 +44,10 @@ export default function GroupExamsPage() {
       header: "تاییدیه",
       icon: <ExclamationCircleIcon width={30} />,
       accept: async () => {
-        const res = await axios.put("/api/exams/group", {
-          examId,
+        const res = await axios.put(`/api/exams/group/${examId}`, {
           action: "toggle-active",
         });
-        console.log(res);
-        if (res.status === 200) fetchExams();
+        fetchExams();
       },
     });
   };
@@ -105,6 +104,18 @@ export default function GroupExamsPage() {
     </button>
   );
 
+  const detailsBodyTemplate = (rowData: IGroupExam) => (
+    <Link href={`/admin/exams/group/${rowData._id}/result`}>
+      <ArrowLongLeftIcon width={30} className="text-blue-500 hover:text-blue-600" />
+    </Link>
+  );
+
+  const answersBodyTemplate = (rowData: IGroupExam)=> (
+    <Link href={`/admin/exams/group/${rowData._id}/add-answers`}>
+      <ClipboardDocumentCheckIcon width={30} className="text-green-500 hover:text-green-600" />
+    </Link>
+  )
+
   if (isLoading) return <Loader />;
   return (
     <div className="p-6">
@@ -117,7 +128,7 @@ export default function GroupExamsPage() {
           onClick={() => setShowCreateModal(true)}
         />
       </div>
-      <div className="glass-effect p-4 rounded-lg">
+      <div className="glass-effect p-4 rounded-lg [&_*]:dark:bg-slate-900">
         <DataTable value={exams}>
           <Column field="title" header="عنوان" />
           <Column field="startTime" header="زمان شروع" />
@@ -128,7 +139,9 @@ export default function GroupExamsPage() {
             body={timeSpentTemplate}
           />
           <Column body={statusBodyTemplate} />
+          <Column body={answersBodyTemplate} />
           <Column body={removeBodyTemplate} />
+          <Column body={detailsBodyTemplate} />
         </DataTable>
       </div>
 

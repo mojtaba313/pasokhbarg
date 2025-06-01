@@ -16,6 +16,23 @@
   @tailwind utilities;
 }
 
+@keyframes border-spin {
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 0deg;
+}
+
+.animate-border {
+  animation: border-spin var(--gradient-speed) linear infinite;
+}
+
+
 /* styles/fonts.css */
 @font-face {
   font-family: "Vazir";

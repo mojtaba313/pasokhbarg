@@ -1,5 +1,12 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export interface IntermediateParticipant {
+  userId: string;
+  answers: participantsAnswer[];
+  startTime: Date;
+  endTime?: Date;
+  percent?:number;
+}
 export interface IntermediateGroupExam {
   _id: string;
   title: string;
@@ -10,18 +17,22 @@ export interface IntermediateGroupExam {
   endTime?: Date;
   adminId: string;
   allowedSubsets: string[];
-  participants: {
-    userId: string;
-    answers: participantsAnswer[];
-    startTime: Date;
-    endTime?: Date;
-  }[];
+  participants: IntermediateParticipant[];
 }
 
 export interface participantsAnswer {
   selectedOption: number;
   timeSpent: number;
   number: number;
+  answer: number;
+}
+
+export interface IParticipant {
+  userId: string;
+  answers: participantsAnswer[];
+  startTime: Date;
+  endTime?: Date;
+  percent?: number;
 }
 
 export interface IGroupExam extends Document {
@@ -34,12 +45,7 @@ export interface IGroupExam extends Document {
   endTime?: Date;
   adminId: string;
   allowedSubsets: string[];
-  participants: {
-    userId: string;
-    answers: participantsAnswer[];
-    startTime: Date;
-    endTime?: Date;
-  }[];
+  participants: IParticipant[];
 }
 
 const GroupExamSchema = new Schema<IGroupExam>({
@@ -59,9 +65,17 @@ const GroupExamSchema = new Schema<IGroupExam>({
   participants: [
     {
       userId: { type: Schema.Types.ObjectId, ref: "User" },
-      answers: [{ selectedOption: Number, timeSpent: Number, number: Number }],
+      answers: [
+        {
+          selectedOption: Number,
+          timeSpent: Number,
+          number: Number,
+          answer: { type: Number, default: 0 },
+        },
+      ],
       startTime: Date,
       endTime: Date,
+      percent: Number,
     },
   ],
 });

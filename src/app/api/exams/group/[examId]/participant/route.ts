@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/auth/authOptions";
 import { IUser } from "@/models/User";
-import GroupExam, { IGroupExam } from "@/models/GroupExam";
+import GroupExam, { IGroupExam, IParticipant } from "@/models/GroupExam";
 import connectDB from "@/lib/mongodb";
+import { claculatePercent, countAnswers } from "@/utils/funcs";
 
 export async function POST(
   req: Request,
@@ -27,13 +28,12 @@ export async function POST(
     return p.userId.toString() === session?.user?._id;
   });
 
-  console.log(participant);
-
   if (participant) {
     participant.startTime = participant.startTime || new Date();
   } else {
     const answers = exam.questions.map((q) => ({
       number: q.number,
+      answer: 0,
       selectedOption: 0,
       timeSpent: 0,
     }));
@@ -91,18 +91,39 @@ export async function GET(
     const session = await getServerSession(authOptions);
 
     if (!session?.user?._id) throw new Error();
-    //
+
     // participants
-    const exam = await GroupExam.findById(examId).select("-questions");
-    const participant = exam.participants.find(
-      (p: any) => p.userId.toString() === session?.user?._id
+    const exam: IGroupExam = await GroupExam.findById(examId).select(
+      "title startTime endTime participants allowedSubsets questions"
     );
-    console.log(participant, exam.participants[0]);
+    const participant: IParticipant | null | undefined =
+      exam?.participants?.find(
+        (p: any) => p.userId.toString() === session?.user?._id
+      );
+
+    if (
+      !exam.allowedSubsets.includes(session?.user?._id) ||
+      !exam ||
+      !participant
+    )
+      throw new Error();
+
+    participant.answers = participant.answers.map((a) => {
+      const question = exam.questions.find((q) => q.number === a.number);
+      return { ...a, answer: question?.answer || 0 };
+    });
+
+    const { correct, incorrect, unanswered } = countAnswers(
+      participant.answers
+    );
+    const percent = claculatePercent(correct, incorrect, unanswered);
+    participant.percent = percent;
 
     if (!exam.allowedSubsets.includes(session?.user?._id)) throw new Error();
 
     return NextResponse.json({ exam, participant });
   } catch (error) {
+    console.error("server Error => ", error);
     return NextResponse.json({ status: 500 });
   }
 }

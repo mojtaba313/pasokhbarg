@@ -35,8 +35,8 @@ export const countAnswers = (questions: Question[]) => {
 export const claculatePercent = (
   correct: number,
   incorrect: number,
-  noanswer: number
-) => (((correct - incorrect / 3) / (correct + incorrect + noanswer)) * 100);
+  unanswered: number
+) => (((correct - incorrect / 3) / (correct + incorrect + unanswered)) * 100);
 
 export const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString("fa-IR");

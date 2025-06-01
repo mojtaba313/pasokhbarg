@@ -3,18 +3,20 @@ import { useState, useEffect, FC, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
+  AdjustmentsHorizontalIcon,
+  AdjustmentsVerticalIcon,
   ArrowLeftIcon,
   ClockIcon,
   ListBulletIcon,
 } from "@heroicons/react/24/outline";
 import Timer from "@/components/Timer";
-import { IQuestion, IntermediateExam } from "@/models/Exam";
+import { IQuestion } from "@/models/Exam";
 import QuestionRow from "../layout/QuestionRow";
-import ConfirmModal from "../ConfirmModal";
 import { Loader } from "../Loader";
 import { useSession } from "next-auth/react";
 import { IGroupExam } from "@/models/GroupExam";
 import Spinner from "../Spinner";
+import { InputSwitch } from "primereact/inputswitch";
 
 interface Props {
   examId: string;
@@ -28,6 +30,7 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
   const [questions, setQuestions] = useState<IQuestion[]>([]);
   const { data: session } = useSession();
   const [isFirstTime, setIsFirstTime] = useState(true);
+  const [horizentalScroll, setHorizentalScroll] = useState(true);
 
   const fetchExam = useCallback(async () => {
     try {
@@ -97,12 +100,13 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
       toggleRowDisable(changeQuestionNumber, false);
     } finally {
       setIsFetchingData(false);
+      if (changeQuestionNumber === currentQuestion)
+        setCurrentQuestion((prev) => prev + 1);
     }
   };
 
   const onChoose = (number: number, optionNumber: number) => {
-    if (isFetchingData) return;
-    if (questions.length === 0) return;
+    if (isFetchingData || questions.length === 0) return;
     const newQuestions = questions.map((q) =>
       q.number === number ? { ...q, selectedOption: optionNumber } : q
     );
@@ -145,9 +149,25 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
           </div>
         </div>
 
+        {/* Setting options */}
+        <div className="px-5 w-full fle- justify-evenly items-center py-2">
+          <div className="flex gap-1">
+            <AdjustmentsHorizontalIcon width={20} />
+            <InputSwitch
+              checked={horizentalScroll}
+              onChange={(e) => setHorizentalScroll(e.value)}
+            />
+            <AdjustmentsVerticalIcon width={20} />
+          </div>
+        </div>
+
         {/* Questions Container */}
         <div
-          className={`flex pb-32 pl-5 gap-6 w-screen overflow-x-auto h-[calc(100vh-5rem)] items-start py-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent pr-20`}
+          className={`flex pb-28 px-3 gap-6 overflow-x-auto h-[calc(100vh-5rem)] items-start ${
+            horizentalScroll
+              ? "overflow-x-hidden flex-wrap justify-center items-center"
+              : ""
+          }`}
         >
           {Array(Math.ceil(questions?.length / 10 || 0))
             .fill(0)
@@ -171,10 +191,10 @@ const SingleGroupExamPage: FC<Props> = ({ examId }) => {
                   {questions.slice(10 * i, 10 * i + 10).map((question, j) => (
                     <div key={`${i}-${j}`}>
                       <QuestionRow
-                        onPause={onPause}
                         question={question}
                         currentQuestion={currentQuestion}
                         setCurrentQuestion={setCurrentQuestion}
+                        onPause={onPause}
                         onChoose={onChoose}
                       />
                     </div>

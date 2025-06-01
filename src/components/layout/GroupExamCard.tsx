@@ -17,10 +17,10 @@ import Timer from "../Timer";
 
 interface Props {
   exam: IntermediateExam;
-  onJoid: (examId: string) => void;
+  onJoin: (examId: string) => void;
 }
 
-const GroupExamCard = ({ exam, onJoid }: Props) => {
+const GroupExamCard = ({ exam, onJoin }: Props) => {
   const toast = useRef<Toast>(null);
   const router = useRouter();
 
@@ -39,7 +39,7 @@ const GroupExamCard = ({ exam, onJoid }: Props) => {
         className: "text-green-500",
         status: "running",
         elem: <PlayIcon width={30} className="text-green-500" />,
-        onClick: () => onJoid(exam._id),
+        onClick: () => onJoin(exam._id),
       }
     : {
         title: "پایان یافته",

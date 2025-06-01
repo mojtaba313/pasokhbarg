@@ -11,7 +11,7 @@ import React, {
 } from "react";
 
 interface Props {
-  question: IQuestion;
+  question: IQuestion | { number: number, answer:number };
   currentQuestion: number;
   setCurrentQuestion: Dispatch<SetStateAction<number>>;
   onChoose: (number: number, optionNumber: number) => void;

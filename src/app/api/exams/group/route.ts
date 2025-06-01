@@ -5,6 +5,7 @@ import { authOptions } from "@/app/auth/authOptions";
 import Exam, { IQuestion } from "@/models/Exam";
 import connectDB from "@/lib/mongodb";
 import GroupExam, { IGroupExam } from "@/models/GroupExam";
+import ExportModal from "@/components/ExportModal";
 
 export async function POST(req: Request) {
   try {
@@ -46,36 +47,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.roles?.includes("admin")) {
-    return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
-  }
 
-  const { examId, action } = await req.json();
-
-  const exam: IGroupExam | null = await GroupExam.findById(examId);
-  if (!exam)
-    return NextResponse.json({ error: "آزمون یافت نشد" }, { status: 404 });
-
-  switch (action) {
-    case "toggle-active": {
-      if (!exam.startTime) {
-        exam.startTime = new Date();
-        await exam.save();
-      } else if (!exam.endTime) {
-        exam.endTime = new Date();
-        await exam.save();
-      }
-      break;
-    }
-
-    default:
-      break;
-  }
-
-  return NextResponse.json(exam);
-}
 
 export async function GET() {
   const session = await getServerSession(authOptions);
