@@ -67,7 +67,7 @@ const GroupExams = () => {
 
   return (
     <section className="mt-12">
-      <div className="flex justify-between items-center mb-8 md:mb-12 glass-panel p-4 md:p-6">
+      <div className="flex justify-between items-center mb-8 md:mb-12 mx-5 glass-panel p-4 md:p-6">
         <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           آزمون های دسته جمعی
         </h1>

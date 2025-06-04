@@ -39,8 +39,6 @@ export async function GET(
       return { ...p, percent };
     });
 
-    console.log(exam.participants[0]);
-
     return NextResponse.json(exam, { status: 200 });
   } catch (error) {
     console.error("server Erro => ", error);

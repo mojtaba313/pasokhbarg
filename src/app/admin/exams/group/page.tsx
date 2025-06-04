@@ -8,16 +8,30 @@ import CreateGroupExamForm from "@/components/admin/CreateGroupExamForm";
 import axios from "axios";
 import { IGroupExam } from "@/models/GroupExam";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
-import { ArrowLongLeftIcon, ClipboardDocumentCheckIcon, ExclamationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowLongLeftIcon,
+  ArrowPathIcon,
+  ClipboardDocumentCheckIcon,
+  ExclamationCircleIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { Loader } from "@/components/Loader";
 import { foramttHour } from "@/utils/funcs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { IUser } from "@/models/User";
+import { useSession } from "next-auth/react";
 
 export default function GroupExamsPage() {
   const [exams, setExams] = useState<IGroupExam[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [subsets, setSubsets] = useState<IUser[]>([]);
+  const [isFetchingSubsets, setIsFetchingSubsets] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
+  const router = useRouter();
+  const { data: session } = useSession();
 
   const fetchExams = async () => {
     setIsLoading(true);
@@ -25,10 +39,19 @@ export default function GroupExamsPage() {
     if (res.status === 200) setExams(res.data);
     setIsLoading(false);
   };
+  const fetchSubsets = async () => {
+    setIsFetchingSubsets(true);
+    const res = await axios.get(
+      `/api/admin/users?adminId=${session?.user?._id}`
+    );
+    setIsFetchingSubsets(false);
+    if (res.status === 200) setSubsets(res.data);
+  };
 
   useEffect(() => {
     fetchExams();
-  }, []);
+    fetchSubsets();
+  }, [session]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -68,7 +91,7 @@ export default function GroupExamsPage() {
   const statusBodyTemplate = (rowData: IGroupExam) =>
     !rowData.startTime ? (
       <Button
-        label="شروع آزمون"
+        label="شروع"
         className="!bg-green-400 !text-green-600"
         onClick={() => handleExamAction(rowData._id)}
       />
@@ -106,33 +129,46 @@ export default function GroupExamsPage() {
 
   const detailsBodyTemplate = (rowData: IGroupExam) => (
     <Link href={`/admin/exams/group/${rowData._id}/result`}>
-      <ArrowLongLeftIcon width={30} className="text-blue-500 hover:text-blue-600" />
+      <ArrowLongLeftIcon
+        width={30}
+        className="text-blue-500 hover:text-blue-600"
+      />
     </Link>
   );
 
-  const answersBodyTemplate = (rowData: IGroupExam)=> (
+  const answersBodyTemplate = (rowData: IGroupExam) => (
     <Link href={`/admin/exams/group/${rowData._id}/add-answers`}>
-      <ClipboardDocumentCheckIcon width={30} className="text-green-500 hover:text-green-600" />
+      <ClipboardDocumentCheckIcon
+        width={30}
+        className="text-green-500 hover:text-green-600"
+      />
     </Link>
-  )
+  );
 
   if (isLoading) return <Loader />;
   return (
     <div className="p-6">
-      <div className="flex justify-between mb-4">
-        <h1 className="text-2xl">مدیریت آزمون‌های جمعی</h1>
-        <Button
-          label="ایجاد آزمون جدید"
-          className="text-slate-950 dark:text-white"
-          icon="pi pi-plus"
-          onClick={() => setShowCreateModal(true)}
-        />
+      <div className="flex justify-between items-center mb-8 md:mb-12 glass-panel p-4 md:p-6">
+        <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          مدیریت آزمون‌های جمعی
+        </h1>
+        <div className="flex gap-3">
+          <Button
+            className="text-white !bg-blue-600"
+            icon={<PlusIcon width={30} />}
+            onClick={() => setShowCreateModal(true)}
+          />
+          <Button icon={<ArrowPathIcon width={30} />} onClick={fetchExams} />
+          <Button onClick={router.back}>
+            <span className="px-2">بازگشت</span>
+            <ArrowLongLeftIcon width={30} />
+          </Button>
+        </div>
       </div>
-      <div className="glass-effect p-4 rounded-lg [&_*]:dark:bg-slate-900">
+
+      <div className="glass-effect p-4 rounded-lg !overflow-hidden">
         <DataTable value={exams}>
           <Column field="title" header="عنوان" />
-          <Column field="startTime" header="زمان شروع" />
-          <Column field="endTime" header="زمان پایان" />
           <Column
             field="spentTime"
             header="زمان سپری شده"
@@ -150,8 +186,11 @@ export default function GroupExamsPage() {
         visible={showCreateModal}
         style={{ width: "50vw" }}
         onHide={() => setShowCreateModal(false)}
+        headerClassName="!text-slate-950 dark:!text-white"
       >
         <CreateGroupExamForm
+          isFetchingSubsets={isFetchingSubsets}
+          subsets={subsets}
           onSuccess={() => {
             setShowCreateModal(false);
             fetchExams();

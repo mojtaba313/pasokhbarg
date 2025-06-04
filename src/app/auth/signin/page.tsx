@@ -49,7 +49,7 @@ export default function SignIn() {
               placeholder="نام کاربری"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+              className="input"
               required
             />
             <input
@@ -57,7 +57,7 @@ export default function SignIn() {
               placeholder="رمز عبور"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+              className="input"
               required
             />
             <button

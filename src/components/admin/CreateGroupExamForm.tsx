@@ -1,51 +1,34 @@
 // components/admin/CreateGroupExamForm.tsx
 "use client";
-import { FormEvent, useEffect, useState } from "react";
-import { Calendar } from "primereact/calendar";
-import { MultiSelect } from "primereact/multiselect";
-import { useSession } from "next-auth/react";
+import { FormEvent, useState } from "react";
 import { Button } from "primereact/button";
 import { IUser } from "@/models/User";
-import { Nullable } from "primereact/ts-helpers";
 import Spinner from "../Spinner";
-import axios from "axios";
+import { MultiSelect } from "../ui/MultiSelect";
+
+interface Props {
+  onSuccess: () => void;
+  isFetchingSubsets: boolean;
+  subsets: IUser[];
+}
 
 export default function CreateGroupExamForm({
   onSuccess,
-}: {
-  onSuccess: () => void;
-}) {
-  const { data: session } = useSession();
+  isFetchingSubsets,
+  subsets,
+}: Props) {
   const [selectedSubsets, setSelectedSubsets] = useState<IUser[]>([]);
-  const [subsets, setSubsets] = useState<IUser[]>([]);
-  const [isFetchingUsers, setIsFetchingUsers] = useState(true);
+
   const [isSendingData, setIsSendingData] = useState(false);
   const [formData, setFormData] = useState<{
     title: string;
     startQuestion: number;
     endQuestion: number;
-    // startTime: Nullable<Date>;
-    // endTime: Nullable<Date>;
   }>({
     title: "",
     startQuestion: 1,
     endQuestion: 10,
-    // startTime: null,
-    // endTime: null,
   });
-
-  const fetchUsers = async () => {
-    setIsFetchingUsers(true);
-    const res = await axios.get(
-      `/api/admin/users?adminId=${session?.user?._id}`
-    );
-    setIsFetchingUsers(false);
-    if (res.status === 200) setSubsets(res.data);
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, [session]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -64,10 +47,11 @@ export default function CreateGroupExamForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-fluid space-y-4">
+    <form onSubmit={handleSubmit} className="p-fluid space-y-4 text-slate-800 dark:text-white">
       <div className="field">
         <label htmlFor="title">عنوان آزمون</label>
         <input
+          className="input"
           id="title"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -77,46 +61,26 @@ export default function CreateGroupExamForm({
 
       <div className="field">
         <label>زیرمجموعه‌های مجاز</label>
-        {isFetchingUsers ? (
+        {isFetchingSubsets ? (
           <Spinner />
         ) : (
-          <MultiSelect
-            value={selectedSubsets}
+          <MultiSelect<IUser>
             options={subsets}
-            onChange={(e) => setSelectedSubsets(e.value)}
+            value={selectedSubsets}
+            onChange={setSelectedSubsets}
             optionLabel="name"
             display="chip"
             filter
+            placeholder="زیرمجموعه‌ها را انتخاب کنید..."
           />
         )}
       </div>
-
-      {/* <div className="grid grid-cols-2 gap-4">
-        <div className="field">
-          <label>زمان شروع</label>
-          <Calendar
-            value={formData.startTime}
-            onChange={(e) => setFormData({ ...formData, startTime: e.value })}
-            showTime
-            required
-          />
-        </div>
-
-        <div className="field">
-          <label>زمان پایان</label>
-          <Calendar
-            value={formData.endTime}
-            onChange={(e) => setFormData({ ...formData, endTime: e.value })}
-            showTime
-            required
-          />
-        </div>
-      </div> */}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="field">
           <label>شماره سوال شروع</label>
           <input
+            className="input"
             type="number"
             value={formData.startQuestion}
             onChange={(e) =>
@@ -129,6 +93,7 @@ export default function CreateGroupExamForm({
         <div className="field">
           <label>شماره سوال پایان</label>
           <input
+            className="input"
             type="number"
             value={formData.endQuestion}
             onChange={(e) =>

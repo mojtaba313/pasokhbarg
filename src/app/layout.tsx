@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import Settings from "../components/layout/Settings";
 import Providers from "./Provider";
 import Navbar from "@/components/layout/Navbar";
 import "primereact/resources/themes/lara-dark-blue/theme.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
+import "primereact/resources/primereact.min.css";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "اپلیکیشن پاسخبرگ",
