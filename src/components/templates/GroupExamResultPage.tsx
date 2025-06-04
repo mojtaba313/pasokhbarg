@@ -323,12 +323,12 @@ const GroupExamResultPage: FC<Props> = ({ examID }) => {
                               {getTooltipContent(question)}
                             </Tooltip> */}
                               <ExamResultQuestionRow question={question} />
-                              <button
+                              {/* <button
                                 onClick={() => openAnalysisModal(question)}
                                 className="ml-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"
                               >
                                 <PencilSquareIcon className="w-5 h-5" />
-                              </button>
+                              </button> */}
                             </div>
                             {/* {showDetails && (
                             <div className="border-b-2 border-black/20">
